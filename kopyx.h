@@ -59,27 +59,27 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "findfirst.h"
+#include "../findfirst/findfirst.h"
 
 static char errmsg[] = 
-  "\nKOPYX è un'utility che copia/cancella dal path sorgente e/o dalle sub-dir\n"
-  "tutti i file che corrispondono al filtro specificato es: kopyx -dfr *.tmp\n"
-  "Se non viene specificata la destinizaione, verrà utilizzata la dir corrente.\n"
-  "Possono essere specificate queste opzioni:\n\n"
-  " -d  cancella dopo avere copiato/trovato (chiede conferma)\n"
-  " -f  cerca soltanto (non copia)\n"
-  " -i  visualizza tutte le info del file sorgente\n"
-  " -r  cerca anche nelle sub-directory\n"
-  " -v  richiede la conferma prima di copiare ogni file\n"
-  " -s  redirige sullo schermo l'output (puo' essere a sua volta rediretto con >)\n"
-  " -y  non chiede conferma per cancellare (usare con attenzione!)\n\n"
-  "Esempi:\n\n"
-  "kopyx -dr /*.dat             copia tuttti i file .dat da / e tutte le sub-dir\n"
-  "                             del disco e cancella gli originali.\n\n"
-  "kopyx -d /home/*.dat /bkup   copia tutti i file .dat da /home\n"
-  "                             alla directory /bkup e cancella gli originali.\n\n"
-  "kopyx -fd /media/*.bak       cerca tutti i file *.bak nella directory /media/\n"
-  "                             chiede conferma prima di cancellare.\n\n"
+  "\nKOPYX is a utility that copies and/or deletes from source path and/or sub-dir\n"
+  "all files that match the specified filter eg: kopyx -dfr * .tmp\n"
+  "If no destination is specified, the current dir will be used.\n"
+  "These options can be specified:\n\n"
+  " -d  delete after copying or finding (asks for confirmation)\n"
+  " -f  just search (don't copy)\n"
+  " -i  show all info of source file\n"
+  " -r  also searches subdirectories\n"
+  " -v  prompts for confirmation before copying each file\n"
+  " -s  redirects the output to the screen (it can also be redirected with \'>\')\n"
+  " -y  doesn't ask for confirmation to delete (use with care!)\n\n"
+  "Examples:\n\n"
+  "kopyx -dr /*.dat              copies all .dat files from / and all sub-dirs\n"
+  "                              on the disk and erase the originals.\n\n"
+  "kopyx -dy /home/*.dat /bkup   copies all .dat files from /home\n"
+  "                              to the /bkup directory and delete the originals.\n\n"
+  "kopyx -fd /media/*.bak        looks for all *.bak files in directory /media/\n"
+  "                              asks for confirmation before deleting.\n\n"
   ;
 
 void copyall(const char *fromdir, const char *filename, const char *todir);

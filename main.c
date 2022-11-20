@@ -70,34 +70,34 @@ int main(int argc, char *argv[]) {
     mode_t st_mode;
 
     opterr = true;
-    while((opt = getopt(argc, argv, "dfisvry")) != -1) { //setta tutte le opzioni passate sulla riga di comando
+    while((opt = getopt(argc, argv, "dfisvry")) != -1) { //sets all options passed on the command line
         switch(opt) {
-            case 'd': //Cancella il file sorgente (se ha la conferma dell'utente) (default non cancella il file sorgente)
+            case 'd': //delete source file if it has user confirmation (default does not delete source file)
                 delete = true;
                 break;
-            case 'f': //Cerca soltanto  (default copia anche)
+            case 'f': //search only (default also copies)
                 find_only = true;
                 break;
-            case 'i': //Visualizza tutte le info del file sorgente
+            case 'i': //view all the info of the source file
                 info = true;
                 break;
-            case 'r': //Estende la ricerca alla sottodirectory specificata (default usa solo la directory specificata)
+            case 'r': //extend the search to the specified subdirectory (default use only the specified directory)
                 include_subdirs = true;
                 break;
-            case 'v': //Chiede una verifica prima di continuare (default continua - la cancellazione richiede sempre conferma)
+            case 'v': //asks for verification before continuing (default continues - deletion always requires confirmation)
                 verify = true;
                 break;
-            case 's': //Redirige la copia sulla periferica di standard output, dalla quale puo' essere rediretto tramite il simbolo di redirezione ">"
+            case 's': //redirect the copy to the standard output device, from which it can be redirected using the redirection symbol '>'
                 standardoutput = true;
                 break;
-            case 'y': //non chiede conferma prima di cancellare
+            case 'y': //does not ask for confirmation before deleting
                 noconfirm = true;
                 break;
-            case '?': //l'opzione inserita non è valida
+            case '?': //the option entered is not valid
                 if(isprint(optopt)) {
-                    printf("\n%s opzione non valida %c\n", argv[0], (char) optopt);
+                    printf("\n%s invalid option %c\n", argv[0], (char) optopt);
                 } else {
-                    printf("\n%s opzione non valida `\\x%x'\n", argv[0], optopt);
+                    printf("\n%s invalid option `\\x%x'\n", argv[0], optopt);
                 }
                 arg_error();
                 break;
@@ -106,96 +106,96 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if(argc <= optind) {//non sono stati passati argomenti
-        fprintf(stderr, "\n%s\nSpecificare almeno un file o una directory sorgente\n", argv[0]);
+    if(argc <= optind) {//no arguments were passed
+        fprintf(stderr, "\n%s\nSpecify at least one source file or directory\n", argv[0]);
         arg_error();
-    } else if((argc - optind) > 2) {//sono stati specificati troppi argomenti
-        fprintf(stderr, "\n%s\nTroppi argomenti specificare un file o una directory sorgente ed eventualmente una directory destinazione\n", argv[0]);
+    } else if((argc - optind) > 2) {//too many arguments have been specified
+        fprintf(stderr, "\n%s\nToo many arguments specify a source file or directory and possibly a destination directory\n", argv[0]);
         arg_error();
     }
 
-    pattern = strdup(argv[optind]); //duplica l'argomento in pattern    
-    st_mode = filetype(pattern); //assegna a st_mode un valore per verificare se l'argometno è una directory o un file (può includere il percorso del file)
+    pattern = strdup(argv[optind]); //duplicates the argument in pattern
+    st_mode = filetype(pattern); //assign st_mode a value to check if the argument is a directory or a file (may include the path to the file)
     switch(st_mode) {
-        case S_IFREG: //se l'argomento continene un percorso completo di un file
-            if(strcmp(dirname(pattern), "/")) { //verifica che la dir sia diversa dalla root /
-                asprintf(&sourcedir, "%s/", dirname(pattern)); //costruisce il percorso aggiungendo lo slash finale
+        case S_IFREG: //if the argument contains a full path to a file
+            if(strcmp(dirname(pattern), "/")) { //verify that the dir is different from the root /
+                asprintf(&sourcedir, "%s/", dirname(pattern)); //builds the path by adding the final slash
             } else {
-                sourcedir = strdup(dirname(pattern)); //restituisce solo la parte del nomepercorso
+                sourcedir = strdup(dirname(pattern)); //returns only part of the pathname
             }
-            sourcefile = strdup(basename(pattern)); //restituisce solo il nome del file senza percorso
+            sourcefile = strdup(basename(pattern)); //returns only the file name without path
             free(pattern);
             break;
-        case S_IFDIR: //se l'argomento contiene una directory SENZA nome di un file
-            if(strcmp(pattern, "/")) { //verifica che la dir sia diversa dalla root /
-                for(ptrstr = pattern; *ptrstr; ptrstr++); //incrementa il puntatore ptrstr fino a fine stringa
-                ptrstr--; //adesso il puntatore ptrstr punterà all'ultimo carattere della stringa pattern
-                //il ciclo elimina tutti icaratteri / alla fine della stringa
-                while(ptrstr != pattern && *ptrstr == '/') { //se ptrstr non punta all'inizio della stringa pattern, quindi non è la directory / e se l'ultimo carattere dell'argomento è /
-                    *ptrstr = '\0'; //allora tronca la stringa eliminanto l'ultimo carattere /
-                    ptrstr--; //decrementa il puntatore al carattere precedente
+        case S_IFDIR: //if the argument contains a directory WITHOUT a file name
+            if(strcmp(pattern, "/")) { //verify that the dir is different from the root /
+                for(ptrstr = pattern; *ptrstr; ptrstr++); //increment the ptrstr pointer to the end of the string
+                ptrstr--; // now the ptrstr pointer will point to the last character of the pattern string
+                //the loop deletes all / characters at the end of the string
+                while(ptrstr != pattern && *ptrstr == '/') { //if ptrstr does not point to the beginning of the pattern string, then it is not the directory / and if the last character of the argument is /
+                    *ptrstr = '\0'; //then truncate the string by deleting the last character /
+                    ptrstr--; //decrements the pointer to the previous character
                 }
-                asprintf(&sourcedir, "%s/", pattern); //assegna il path e aggiunge lo slash
+                asprintf(&sourcedir, "%s/", pattern); //assign the path and add the slash
             } else {
-                sourcedir = strdup(pattern); //duplica il path
+                sourcedir = strdup(pattern); //duplicate the path
             }
-            asprintf(&sourcefile, "*"); //non è stato specificato un file sorgente copierà tutto il contenuto della directory specificand *
+            asprintf(&sourcefile, "*"); //a source file has not been specified will copy all the contents of the specified directory *
             free(pattern);
             break;
-        case false: //il file non esiste nella directory specificata
-            if(!include_subdirs) { //se non è stato specificato di cercare nelle subdirectory
-                fprintf(stderr, "\nFile \'%s\': non esiste nella directory specificata, usa -r per cercare nelle sub-dir\n", pattern);
+        case false: //the file does not exist in the specified directory
+            if(!include_subdirs) { //if not specified to search subdirectories
+                fprintf(stderr, "\nFile \'%s\': does not exist in the specified directory, use -r to search sub-dirs\n", pattern);
                 free(pattern);
                 exit(1);
             }
-            sourcedir = strdup(dirname(pattern)); //restituisce solo la parte del nomepercorso
-            if(strcmp(sourcedir, "/")) {//verifica che la dir sia diversa dalla root /
-                strcat(sourcedir, "/"); //aggiunge lo slash
+            sourcedir = strdup(dirname(pattern)); //returns only part of the pathname
+            if(strcmp(sourcedir, "/")) {//verify that the dir is different from the root /
+                strcat(sourcedir, "/"); //adds the slash
             }
-            sourcefile = strdup(basename(pattern)); //restituisce solo il nome del file senza percorso
+            sourcefile = strdup(basename(pattern)); //returns only the file name without path
             free(pattern);
             break;
         default:
-            fprintf(stderr, "\nSorgente: \'%s\' non valida\n", pattern);
+            fprintf(stderr, "\nSource: \'%s\' invalid\n", pattern);
             free(pattern);
             exit(EXIT_FAILURE);
             break;
     }
 
-    if(sourcedir[0] != '.' && sourcedir[0] != '/') { //se la directory non comincia con . e non comincia con / aggiunge un "./" allinizio della variabile
+    if(sourcedir[0] != '.' && sourcedir[0] != '/') { //if the directory does not begin with. and it doesn't start with / adds a "./" at the beginning of the variable
         asprintf(&pattern, "./%s", sourcedir);
         free(sourcedir);
         sourcedir = strdup(pattern);
         free(pattern);
     }
     
-    if(!(argv[optind+1])) {//se non è specificata la destinazione definisce la current dir
+    if(!(argv[optind+1])) {//if not specified the destination defines the current dir
         destdir = strdup("./");
     } else {
-        secarg = optind +1; //indice del secondo argomento
-        last = strlen(argv[secarg]) -1; //punta all'ultimo carattere prima del NULL
+        secarg = optind +1; //index of the second argument
+        last = strlen(argv[secarg]) -1; //points to the last character before NULL
         
-        if(argv[secarg][last] != '/') { //verifica che l'ultimo carattere sia diverso da slash
-            asprintf(&pattern, "%s/", argv[secarg]); //aggiunge uno slash alla fine del percorso
+        if(argv[secarg][last] != '/') { //verify that the last character is different from slash
+            asprintf(&pattern, "%s/", argv[secarg]); //adds a slash at the end of the path
         } else {
-            pattern = strdup(argv[secarg]); //duplica il percorso così com'è
+            pattern = strdup(argv[secarg]); //duplicate the path as it is
         }
         
-        if(pattern[0] != '.' && pattern[0] != '/') { //verifica che il primo carattere non sia ne . ne /
-            asprintf(&destdir, "./%s", pattern); //inserisce il ./ come percorso relativo alla posizione corrente
+        if(pattern[0] != '.' && pattern[0] != '/') { //verify that the first character is not ne. neither /
+            asprintf(&destdir, "./%s", pattern); //inserts the ./ as a path relative to the current location
         } else {
-            destdir = strdup(pattern); //duplica il percorso così com'è
+            destdir = strdup(pattern); //duplicate the path as it is
         }
         free(pattern);
     }
     
-    copyall(sourcedir, sourcefile, destdir); //funzione principale di ricerca e copia
+    copyall(sourcedir, sourcefile, destdir); //main search and copy function
 
-    if(!found_one) { //se non è stato trovato il file origine
-        fprintf(stderr, "Nessun file trovato\n");
-        if(!include_subdirs) { //se non è stato specificato di ricercare nelle subdirectory
-            fprintf(stderr, " se usi l'opzione -r puoi cercare nelle sub-directory di %s\n", sourcedir);
-            fprintf(stderr, " oppure puoi specificare /%s per cercare nell'intero disco.\n", sourcefile);
+    if(!found_one) { //if the source file was not found
+        fprintf(stderr, "No files found\n");
+        if(!include_subdirs) { //if not specified to search subdirectories
+            fprintf(stderr, " if you use the -r option you can search the subdirectories of %s\n", sourcedir);
+            fprintf(stderr, " or you can specify /%s to search the entire disk.\n", sourcefile);
         }
     }
     free(sourcedir);

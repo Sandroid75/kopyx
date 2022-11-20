@@ -73,61 +73,61 @@ void copyall(const char *fromdir, const char *filename, const char *todir) {
     ssize_t totalfilesbytes, diskavailbytes;
     struct _finddata_t block;
     
-    diskavailbytes = totaldiskspace(todir); //calcola lo spazio disponibile sul disco
+    diskavailbytes = totaldiskspace(todir); //calculates the total space on the destination disk
     totalfilesbytes = totalfilessize(fromdir, filename);
 
     if(diskavailbytes <= totalfilesbytes) {
-        fprintf(stderr, "Spazio insufficiente su:\n%s\n\nliberare lo spazio prima di riprovare.", todir);
-        fprintf(stderr, "Spazio totale richiesto per la copia: %ld bytes\n", totalfilesbytes);
-        fprintf(stderr, "Spazio disponibile sull'unità di destinazione: %ld bytes\n", diskavailbytes);
-        fprintf(stderr, "Spazio minimo da liberare prima della copia: %ld bytes\n", diskavailbytes - totalfilesbytes);
+        fprintf(stderr, "Insufficient space on: \n%s\n\nplease free some space before trying again.", todir);
+        fprintf(stderr, "Total space required for the copy: %ld bytes\n", totalfilesbytes);
+        fprintf(stderr, "Space available on the destination drive: %ld bytes\n", diskavailbytes);
+        fprintf(stderr, "Minimum space to free before copying: %ld bytes\n", diskavailbytes - totalfilesbytes);
 
         return;        
     }
 
-    asprintf(&spath, "%s%s", fromdir, filename); //cotruisce il percorso completo + il nomefile
-    handle = _findfirst(spath, &block); //prova a leggere le info del file
-    free(spath); //rilascia la memoria
+    asprintf(&spath, "%s%s", fromdir, filename); //builds the full path + filename
+    handle = _findfirst(spath, &block); //try to read the info of the file
+    free(spath);
     
-    if(handle != -1L) { //se ha trovato un file valido
+    if(handle != -1L) { //if it found a valid file
         do {
-            found_one = true; //setta la varibile globale per specificare che è stato trovato un file origine valido
+            found_one = true; //set the global variable to specify that a valid source file was found
 
-            asprintf(&spath, "%s%s", fromdir, block.name); //cotruisce il percorso completo + il nome file di origine
-            asprintf(&tpath, "%s%s", todir, block.name); //cotruisce il percorso completo + il nome file di destinazione
+            asprintf(&spath, "%s%s", fromdir, block.name); //builds full path + source filename
+            asprintf(&tpath, "%s%s", todir, block.name); //builds the full path + destination filename
 
-            if(info) { //se è stato specificato di visualizzare le info del file
+            if(info) { //if it specified to show file info
                 file_info(spath);
             }
 
-            if(find_only) { // se è stato specificato di cercare solo
+            if(find_only) { //if it have specified to search only
                 find(spath);
-            } else if(standardoutput) { //redirige l'output sullo schermo
+            } else if(standardoutput) { //redirect the output to the screen
                 showtoscreen(spath);
-            } else if(strcmp(spath, tpath)) { //altrimenti se origine e destinazione non coincidono copia
-                filecopy(spath, tpath); //copia il file sulla destinazione
-            } else {//se origine e destinazione coincidono
-                found_one = false; //resetta nuovamente la varibile globale
+            } else if(strcmp(spath, tpath)) { //otherwise if origin and destination do not coincide, copy
+                filecopy(spath, tpath); //copy the file to the destination
+            } else {//if origin and destination coincide
+                found_one = false; //resets the global variable again
             }
             
-            free(spath); //rilascia la memoria
-            free(tpath); //rilascia la memoria
+            free(spath);
+            free(tpath);
         } while(!_findnext(handle, &block));
     }
     _findclose(handle);
     
-    if(include_subdirs) { //se è stato specificato di cercare anche nelle subdirecory
-        asprintf(&spath, "%s/*", fromdir); //cotruisce il percorso completo + il nome file di origine
-        handle = _findfirst(spath, &block); //verifica le info del file
-        free(spath); //rilascia la memoria
+    if(include_subdirs) { //if it has specified to also search in subdirectories
+        asprintf(&spath, "%s/*", fromdir); //builds full path + source filename
+        handle = _findfirst(spath, &block); //check the file info
+        free(spath);
         
         if(handle != -1L) {
             do {
-                if(block.attrib & _A_SUBDIR) //se è stato trovato una subdirectory
-                    if(block.name [0] != '.' && block.name[0] != '/') { //e il primo carattere non sia un carattere speciale
-                        asprintf(&spath, "%s/%s/", fromdir, block.name); //cotruisce il percorso completo aggiungendo quello trovato
-                        copyall(spath, filename, todir); //ricorsione per cercare nelle subdirectory
-                        free(spath); //rilascia la memoria
+                if(block.attrib & _A_SUBDIR) //if a subdirectory was found
+                    if(block.name [0] != '.' && block.name[0] != '/') { //and the first character is not a special character
+                        asprintf(&spath, "%s/%s/", fromdir, block.name); //builds the complete path by adding the one found
+                        copyall(spath, filename, todir); //recursion to search subdirectories
+                        free(spath);
                     }
             } while(!_findnext(handle, &block));
         }
@@ -141,7 +141,7 @@ long long totaldiskspace(const char *todir) {
     struct statvfs diskinfo;
     
     statvfs(todir, &diskinfo); //get disk attributes
-    return (long long) diskinfo.f_bsize * diskinfo.f_bavail; //calcola lo spazio disponibile sul disco
+    return (long long) diskinfo.f_bsize * diskinfo.f_bavail; //calculates the available disk space
 }
 
 long long totalfilessize(const char *fromdir, const char *filename) {
@@ -151,24 +151,24 @@ long long totalfilessize(const char *fromdir, const char *filename) {
     struct stat sb;
     unsigned long totalspace = 0L;
 
-    asprintf(&spath, "%s%s", fromdir, filename); //cotruisce il percorso completo + il nomefile
-    handle = _findfirst(spath, &block); //prova a leggere le info del file
-    free(spath); //rilascia la memoria
+    asprintf(&spath, "%s%s", fromdir, filename); //builds the full path + filename
+    handle = _findfirst(spath, &block); //try to read the info of the file
+    free(spath);
     
-    if(handle != -1L) { //se ha trovato un file valido
+    if(handle != -1L) { //if it found a valid file
         do {
-            asprintf(&spath, "%s%s", fromdir, block.name); //cotruisce il percorso completo + il nome file di origine
+            asprintf(&spath, "%s%s", fromdir, block.name); //builds full path + source filename
 
-            if(lstat(spath, &sb) == -1) { //interroga il file
-                fprintf(stderr, "\nErrore stat su %s\n", filename);
+            if(lstat(spath, &sb) == -1) { //query the file stats
+                fprintf(stderr, "\nError stat on %s\n", filename);
 
                 return -1L;
             }
-            if((sb.st_mode & S_IFMT) == S_IFREG) { //verifica che sia un file regolare
-                totalspace += sb.st_size; //incrementa il contatore dei bytes
+            if((sb.st_mode & S_IFMT) == S_IFREG) { //verify that it is a regular file
+                totalspace += sb.st_size; //increment the bytes counter
             }
 
-            free(spath); //rilascia la memoria
+            free(spath);
         } while(!_findnext(handle, &block));
     }
     _findclose(handle);
@@ -183,7 +183,7 @@ void showtoscreen(const char *from) {
     
     if(verify) {
         fprintf(stderr, "File: %s", from);
-        if(!getyval(" - visualizzo (Si/No)?")) {
+        if(!getyval(" - Show (Yes/No)?")) {
             return;
         }
         fprintf(stderr, "\n");
@@ -191,7 +191,7 @@ void showtoscreen(const char *from) {
 
     fptr = fopen(from, "r");
     if(!fptr) {
-        fprintf(stderr, "Errore nell'apertura del file %s\n", from);
+        fprintf(stderr, "Error opening file %s\n", from);
         
         return;
     }
@@ -204,9 +204,9 @@ void showtoscreen(const char *from) {
     
     if(delete) {
         fprintf(stderr, "File: %s", from);
-        if(getyval(" - cancello (Si/No)?")) {
-            if(!rm(from)) { //cancella il file sorgente
-                fprintf(stderr, "cancellato!\n");
+        if(getyval(" - delete (Yes/No)?")) {
+            if(!rm(from)) { //delete the source file
+                fprintf(stderr, "deleted!\n");
             }
         }
     }
@@ -220,25 +220,25 @@ ssize_t filecopy(const char *source, const char *destination) {
 	ssize_t result = -1L;
     off_t bytesCopied = 0;
 	char *errnomsg;
-	_Bool check = false, faliure = false;
+	//_Bool check = false, faliure = false;
 
-    fprintf(stderr, "\nCopio %s -> %s", source, destination);
+    fprintf(stderr, "\nCoping %s -> %s", source, destination);
 
-    if(verify) { //se l'utente ha specificato -v
-        if(!getyval(" - copiare (Si/No)?")) {
+    if(verify) { //if the user specified -v
+        if(!getyval(" - copy (Yes/No)?")) {
 
             return result;
         }
     }
 
-    if((input = open(source, O_RDONLY)) == -1) { //prova ad aprire il file sorgente
-        fprintf(stderr, "%s: Errore lettura di: %s\n", __func__, source);
+    if((input = open(source, O_RDONLY)) == -1) { //try opening the source file
+        fprintf(stderr, "%s: Read error: %s\n", __func__, source);
 
         return result;
     }
 
 	errno = 0;
-    if(fstat(input, &fileinfo)) { //legge gli attributi del file sorgente
+    if(fstat(input, &fileinfo)) { //read the attributes of the source file
         switch(errno) {
             case EACCES:
                 errnomsg = "Search permission is denied for one of the directories in the path prefix of source file.";
@@ -272,14 +272,14 @@ ssize_t filecopy(const char *source, const char *destination) {
                 errnomsg = NULL;
                 break;
         }
-        fprintf(stderr, "Errore nella verifica del file %s\nerrno: [%d] %s\n", source, errno, errnomsg);
+        fprintf(stderr, "File verification error %s\nerrno: [%d] %s\n", source, errno, errnomsg);
 
         return result;
     }
 
-    if((output = opennew(destination)) == -1) { //prova ad parire i lfile destinazione
+    if((output = opennew(destination)) == -1) { //try to open the target file
         close(input);
-        fprintf(stderr, "Errore scrittura di: %s\n", destination);
+        fprintf(stderr, "Write error: %s\n", destination);
 
         return result;
     }
@@ -317,12 +317,12 @@ ssize_t filecopy(const char *source, const char *destination) {
 			errnomsg = NULL;
 			break;
 	}
-	if(errno) { //se si è verificato un errore
-		fprintf(stderr, "Errore nella copia del file %s\nerrno: [%d] %s\n", source, errno, errnomsg); //stampa il messaggio di errore su stderr
+	if(errno) { //if an error has occurred
+		fprintf(stderr, "File copy error %s\nerrno: [%d] %s\n", source, errno, errnomsg); //print the error message on stderr
 	}
-	if(result != fileinfo.st_size) { //verifica che tutti i bytes siano stati copiati
-		fprintf(stderr, "Errore: non tutti i dati sono stati copiati!\nScritti %ld bytes su %ld bytes\n", result, fileinfo.st_size);
-        result = getyval("Continuo (Si/No)?") ? result : -1L; //se l'utente conferma continua la copia di altri files
+	if(result != fileinfo.st_size) { //verify that all bytes have been copied
+		fprintf(stderr, "Error: not all data was copied!\nWrited %ld bytes on %ld bytes\n", result, fileinfo.st_size);
+        result = getyval("Continue (Yes/No)?") ? result : -1L; //if the user confirms, the copying of other files continues
 	}
 
     close(input); //close the handle
@@ -330,9 +330,9 @@ ssize_t filecopy(const char *source, const char *destination) {
 
     if(delete) {
         fprintf(stderr, "File: %s", source);
-        if(getyval(" - cancello (Si/No)?")) {
-            if(!rm(source)) { //cancella il file sorgente
-                fprintf(stderr, "cancellato!\n");
+        if(getyval(" - delete (Yes/No)?")) {
+            if(!rm(source)) { //delete the source file
+                fprintf(stderr, "deleted!\n");
             }
         }
     }
@@ -378,24 +378,24 @@ int rm(const char *fname) {
 			break;
 	}
     if(errno) { //se si è verificato un errore
-		fprintf(stderr, "Errore nella rimozione del file %s\nerrno: [%d] %s\n", fname, errno, errnomsg); //stampa il messaggio di errore su stderr
+		fprintf(stderr, "Error removing file %s\nerrno: [%d] %s\n", fname, errno, errnomsg); //stampa il messaggio di errore su stderr
 	}
 
     return result;
 }
 
 void find(const char *fname) {
-    fprintf(stderr, "Trovato: %s", fname);
+    fprintf(stderr, "Found: %s", fname);
     if(delete) {
         fprintf(stderr, "File: %s", fname);
-        if(getyval(" - cancello (Si/No)?")) {
-            if(!rm(fname)) { //cancella il file sorgente
-                fprintf(stderr, "\ncancellato!\n");
+        if(getyval(" - delete (Yes/No)?")) {
+            if(!rm(fname)) { //delete the source file
+                fprintf(stderr, "\ndeleted!\n");
             }
         }
     }
     if(verify) {
-        if(!getyval(" - continuo (Si/No)?")) {
+        if(!getyval(" - continue (Yes/No)?")) {
             exit(EXIT_SUCCESS);
         }
     }
@@ -411,11 +411,11 @@ void closefiles(FILE *fptr, FILE *tptr) {
 }
 
 int opennew(const char *fname) {    
-    int fhandle;
+    //int fhandle;
 
-    if(!access(fname, F_OK)) { //verifica se il file destinazione esiste già
-        fprintf(stderr, "Errore: file destinazione %s esiste già\n", fname);
-        if(!getyval("Sovrascrivo (Si/No)?")) { //conferma la sovrascrittura
+    if(!access(fname, F_OK)) { //check if the target file already exists
+        fprintf(stderr, "Error: destination file %s exist\n", fname);
+        if(!getyval("Overwrite (Yes/No)?")) { //confirm overwriting
             return -1;
         }        
     }
@@ -426,7 +426,7 @@ int opennew(const char *fname) {
 void arg_error(void) {
     fprintf(stderr, "%s", errmsg);    
 
-    getyval("\nPremi un tasto per continuare");
+    getyval("\nPress a key to continue...");
     
     exit(EXIT_FAILURE);
 }
@@ -434,7 +434,7 @@ void arg_error(void) {
 int getyval(const char *msg) {
     char entered;
 
-    if(noconfirm) { //se l'utente ha specificato l'opzione -y
+    if(noconfirm) { //if the user specified the -y option
 
         return true;
     }
@@ -445,7 +445,7 @@ int getyval(const char *msg) {
         exit(EXIT_FAILURE);
     }
         
-    return (tolower(entered) == 's');
+    return (tolower(entered) == 'y'); //return true if user input 'Y' or 'y'
 }
 
 int file_info(const char *file_name) {
@@ -453,7 +453,7 @@ int file_info(const char *file_name) {
     int i;
 
     if(lstat(file_name, &sb) == -1) {
-        fprintf(stderr, "\nErrore stat su %s\n", file_name);
+        fprintf(stderr, "\nStat error in %s\n", file_name);
         
         return false;
     }
