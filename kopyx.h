@@ -61,28 +61,13 @@
 #include <sys/stat.h>
 #include "../findfirst/findfirst.h"
 
-static char errmsg[] = 
-  "\nKOPYX is a utility that copies and/or deletes from source path and/or sub-dir\n"
-  "all files that match the specified filter eg: kopyx -dfr * .tmp\n"
-  "If no destination is specified, the current dir will be used.\n"
-  "These options can be specified:\n\n"
-  " -d  delete after copying or finding (asks for confirmation)\n"
-  " -f  just search (don't copy)\n"
-  " -i  show all info of source file\n"
-  " -r  also searches subdirectories\n"
-  " -v  prompts for confirmation before copying each file\n"
-  " -s  redirects the output to the screen (it can also be redirected with \'>\')\n"
-  " -y  doesn't ask for confirmation to delete (use with care!)\n\n"
-  "Examples:\n\n"
-  "kopyx -dr /*.dat              copies all .dat files from / and all sub-dirs\n"
-  "                              on the disk and erase the originals.\n\n"
-  "kopyx -dy /home/*.dat /bkup   copies all .dat files from /home\n"
-  "                              to the /bkup directory and delete the originals.\n\n"
-  "kopyx -fd /media/*.bak        looks for all *.bak files in directory /media/\n"
-  "                              asks for confirmation before deleting.\n\n"
-  ;
+#ifdef DEBUG
+#define DBG_MSG(msg, ...) { fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); }
+#else
+#define DBG_MSG(msg, ...) {}
+#endif
 
-void copyall(const char *fromdir, const char *filename, const char *todir);
+void copyall(const char *filename, const char *fromdir, const char *todir);
 long long totalfilessize(const char *fromdir, const char *filename);
 long long totaldiskspace(const char *todir);
 void showtoscreen(const char *from);
@@ -93,9 +78,10 @@ int opennew(const char *fname);
 int rm(const char *fname);
 void arg_error(void);
 int getyval(const char *msg);
-int file_info(const char *file_name);
+int file_info(const char *filename);
 mode_t filetype(const char *filename);
-//int stricmp(char const *, char const *);
+char *buildpath(const char *dirname);
+bool isvalidfilename(const char *filename);
 
 static _Bool found_one = false, delete = false, find_only = false, verify = false, standardoutput = false, info = false, include_subdirs = false, noconfirm = false;
 

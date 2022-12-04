@@ -67,7 +67,7 @@
 #include <errno.h>
 #include "kopyx.h"
 
-void copyall(const char *fromdir, const char *filename, const char *todir) {
+void copyall(const char *filename, const char *fromdir, const char *todir) {
     char *spath, *tpath;
     intptr_t handle;
     ssize_t totalfilesbytes, diskavailbytes;
@@ -77,7 +77,7 @@ void copyall(const char *fromdir, const char *filename, const char *todir) {
     totalfilesbytes = totalfilessize(fromdir, filename);
 
     if(diskavailbytes <= totalfilesbytes) {
-        fprintf(stderr, "Insufficient space on: \n%s\n\nplease free some space before trying again.", todir);
+        fprintf(stderr, "\nInsufficient space on: \n%s\n\nplease free some space before trying again.", todir);
         fprintf(stderr, "Total space required for the copy: %ld bytes\n", totalfilesbytes);
         fprintf(stderr, "Space available on the destination drive: %ld bytes\n", diskavailbytes);
         fprintf(stderr, "Minimum space to free before copying: %ld bytes\n", diskavailbytes - totalfilesbytes);
@@ -182,16 +182,16 @@ void showtoscreen(const char *from) {
     FILE *fptr;
     
     if(verify) {
-        fprintf(stderr, "File: %s", from);
+        printf("File: %s", from);
         if(!getyval(" - Show (Yes/No)?")) {
             return;
         }
-        fprintf(stderr, "\n");
+        printf("\n");
     }
 
     fptr = fopen(from, "r");
     if(!fptr) {
-        fprintf(stderr, "Error opening file %s\n", from);
+        fprintf(stderr, "\nError opening file %s\n", from);
         
         return;
     }
@@ -203,10 +203,10 @@ void showtoscreen(const char *from) {
     fclose(fptr);
     
     if(delete) {
-        fprintf(stderr, "File: %s", from);
+        printf("File: %s", from);
         if(getyval(" - delete (Yes/No)?")) {
             if(!rm(from)) { //delete the source file
-                fprintf(stderr, "deleted!\n");
+                printf("deleted!\n");
             }
         }
     }
@@ -232,7 +232,7 @@ ssize_t filecopy(const char *source, const char *destination) {
     }
 
     if((input = open(source, O_RDONLY)) == -1) { //try opening the source file
-        fprintf(stderr, "%s: Read error: %s\n", __func__, source);
+        fprintf(stderr, "\n%s: Read error: %s\n", __func__, source);
 
         return result;
     }
@@ -272,14 +272,14 @@ ssize_t filecopy(const char *source, const char *destination) {
                 errnomsg = NULL;
                 break;
         }
-        fprintf(stderr, "File verification error %s\nerrno: [%d] %s\n", source, errno, errnomsg);
+        fprintf(stderr, "\nFile verification error %s\nerrno: [%d] %s\n", source, errno, errnomsg);
 
         return result;
     }
 
     if((output = opennew(destination)) == -1) { //try to open the target file
         close(input);
-        fprintf(stderr, "Write error: %s\n", destination);
+        fprintf(stderr, "\nWrite error: %s\n", destination);
 
         return result;
     }
@@ -318,10 +318,10 @@ ssize_t filecopy(const char *source, const char *destination) {
 			break;
 	}
 	if(errno) { //if an error has occurred
-		fprintf(stderr, "File copy error %s\nerrno: [%d] %s\n", source, errno, errnomsg); //print the error message on stderr
+		fprintf(stderr, "\nFile copy error %s\nerrno: [%d] %s\n", source, errno, errnomsg); //print the error message on stderr
 	}
 	if(result != fileinfo.st_size) { //verify that all bytes have been copied
-		fprintf(stderr, "Error: not all data was copied!\nWrited %ld bytes on %ld bytes\n", result, fileinfo.st_size);
+		fprintf(stderr, "\nError: not all data was copied!\nWrited %ld bytes on %ld bytes\n", result, fileinfo.st_size);
         result = getyval("Continue (Yes/No)?") ? result : -1L; //if the user confirms, the copying of other files continues
 	}
 
@@ -329,10 +329,10 @@ ssize_t filecopy(const char *source, const char *destination) {
     close(output); //close the handle
 
     if(delete) {
-        fprintf(stderr, "File: %s", source);
+        printf("\nFile: %s", source);
         if(getyval(" - delete (Yes/No)?")) {
             if(!rm(source)) { //delete the source file
-                fprintf(stderr, "deleted!\n");
+                printf("deleted!\n");
             }
         }
     }
@@ -345,7 +345,15 @@ int rm(const char *fname) {
     char *errnomsg;
 
     errno = 0;
-    result = remove(fname);
+    result = filetype(fname);
+    if(result == S_IFREG) {
+        result = remove(fname);
+    } else if(result == S_IFDIR) {
+        result = rmdir(fname);
+    } else {
+        fprintf(stderr, "\nError %s is not a file or directory.\n", fname);
+        exit(EXIT_FAILURE);
+    }
 
     switch(errno) {
 		case EACCES:
@@ -378,19 +386,19 @@ int rm(const char *fname) {
 			break;
 	}
     if(errno) { //se si è verificato un errore
-		fprintf(stderr, "Error removing file %s\nerrno: [%d] %s\n", fname, errno, errnomsg); //stampa il messaggio di errore su stderr
+		fprintf(stderr, "\nError removing file %s\nerrno: [%d] %s\n", fname, errno, errnomsg); //stampa il messaggio di errore su stderr
 	}
 
     return result;
 }
 
 void find(const char *fname) {
-    fprintf(stderr, "Found: %s", fname);
+    printf("\nFound: %s", fname);
     if(delete) {
-        fprintf(stderr, "File: %s", fname);
+        printf("\nFile: %s", fname);
         if(getyval(" - delete (Yes/No)?")) {
             if(!rm(fname)) { //delete the source file
-                fprintf(stderr, "\ndeleted!\n");
+                printf("\ndeleted!\n");
             }
         }
     }
@@ -414,7 +422,7 @@ int opennew(const char *fname) {
     //int fhandle;
 
     if(!access(fname, F_OK)) { //check if the target file already exists
-        fprintf(stderr, "Error: destination file %s exist\n", fname);
+        fprintf(stderr, "\nError: destination file %s exist\n", fname);
         if(!getyval("Overwrite (Yes/No)?")) { //confirm overwriting
             return -1;
         }        
@@ -424,9 +432,29 @@ int opennew(const char *fname) {
 }
 
 void arg_error(void) {
-    fprintf(stderr, "%s", errmsg);    
+    char errmsg[] = 
+        "\nKOPYX is a utility that copies and/or deletes from source path\n"
+        "and/or sub-dir all files that match the specified filter.\n"
+        "If no destination is specified, the current dir will be used.\n"
+        "These options can be specified:\n\n"
+        " -d  delete after copying or finding (asks for confirmation)\n"
+        " -f  just search (don't copy)\n"
+        " -i  show all info of source file\n"
+        " -r  also searches subdirectories\n"
+        " -v  prompts for confirmation before copying each file\n"
+        " -s  redirects the output to the screen (it can also be redirected with \'>\')\n"
+        " -y  doesn't ask for confirmation to delete (use with care!)\n\n"
+        "Examples:\n\n"
+        "kopyx -dr \"*.dat\" /              copies all .dat files from / and all sub-dirs\n"
+        "                                   on the current dir ./ and delete the originals.\n\n"
+        "kopyx -dy \"*.dat\" /home/ /bkup   copies all .dat files from /home to /bkup\n"
+        "                                   directory and delete the source files.\n\n"
+        "kopyx -fd \"*.tmp\" /media/        search for all .tmp files in directory /media/\n"
+        "                                   than asks for confirmations before deleting.\n\n";
 
-    getyval("\nPress a key to continue...");
+    fprintf(stderr, "%s", errmsg);
+
+    //getyval("\nPress a key to continue...");
     
     exit(EXIT_FAILURE);
 }
@@ -448,12 +476,13 @@ int getyval(const char *msg) {
     return (tolower(entered) == 'y'); //return true if user input 'Y' or 'y'
 }
 
-int file_info(const char *file_name) {
+int file_info(const char *filename) {
     struct stat sb;
     int i;
+    char *msg;
 
-    if(lstat(file_name, &sb) == -1) {
-        fprintf(stderr, "\nStat error in %s\n", file_name);
+    if(lstat(filename, &sb) == -1) {
+        fprintf(stderr, "\nStat error in %s\n", filename);
         
         return false;
     }
@@ -461,33 +490,34 @@ int file_info(const char *file_name) {
     for(i = 0; i < 50; i++) {
         putchar('*');
     }    
-    printf("\n%s\nFile type:                ", file_name);    
+    printf("\n%s\nFile type:                ", filename);    
     switch(sb.st_mode & S_IFMT) {
         case S_IFBLK:
-            printf("block device\n");
+            msg = "block device";
             break;
         case S_IFCHR:
-            printf("character device\n");
+            msg = "character device";
             break;
         case S_IFDIR:
-            printf("directory\n");
+            msg = "directory";
             break;
         case S_IFIFO:
-            printf("FIFO/pipe\n");
+            msg = "FIFO/pipe";
             break;
         case S_IFLNK:
-            printf("symlink\n");
+            msg = "symlink";
             break;
         case S_IFREG:
-            printf("regular file\n");
+            msg = "regular file";
             break;
         case S_IFSOCK:
-            printf("socket\n");
+            msg = "socket";
             break;
         default:
-            printf("unknown?\n");
+            msg = "unknown?";
             break;
     }
+    printf("%s\n", msg);
 
     printf("I-node number:            %ld\n", (long) sb.st_ino);
     printf("Mode:                     %lo (octal)\n", (unsigned long) sb.st_mode);
@@ -516,4 +546,66 @@ mode_t filetype(const char *filename) {
     }
 
     return (sb.st_mode & S_IFMT);
+}
+
+char *buildpath(const char *dirname) {
+    char *half_path, *path;
+
+    if(dirname[0] != '.' && dirname[0] != '/') { //if dirname does not begin with . and it doesn't start with / adds a "./" at the beginning of the variable
+        asprintf(&half_path, "./%s", dirname);
+    } else {
+        half_path = strdup(dirname);
+    }
+
+    if(half_path[strlen(half_path) -1] != '/') { //verify that the last character is different from slash
+        asprintf(&path, "%s/", half_path); //adds a slash at the end of the path
+    } else {
+        path = strdup(half_path); //duplicate the path as it is
+    }
+    
+    free(half_path);
+
+    return path;
+}
+
+bool isvalidfilename(const char *filename) {
+    mode_t st_mode;
+    char dir_template[] = "/tmp/kopyx-tmpdir.XXXXXX", *temp_dir, temp_file[FILENAME_MAX];
+    FILE *fd;
+
+    st_mode = filetype(filename);
+    if(st_mode == S_IFREG) {
+        return true;
+    }
+
+    temp_dir = mkdtemp(dir_template);
+    if(temp_dir == NULL) {
+        fprintf(stderr, "\nError creating temporary directory %s", temp_dir);
+        exit(EXIT_FAILURE);
+    }
+    sprintf(temp_file, "%s/%s", temp_dir, filename);
+
+    fd = fopen(temp_file, "w");
+    if(fd == NULL) {
+        if(rm(temp_dir)) {
+            fprintf(stderr, "\nError removing temporary directory %s\n", temp_dir);
+            exit(EXIT_FAILURE);
+        }
+        
+        return false;
+    }
+    fclose(fd);
+
+    st_mode = filetype(temp_file);
+
+    if(rm(temp_file)) {
+        fprintf(stderr, "\nError removing temporary file %s\n", temp_file);
+        exit(EXIT_FAILURE);
+    }
+    if(rm(temp_dir)) {
+        fprintf(stderr, "\nError removing temporary directory %s\n", temp_dir);
+        exit(EXIT_FAILURE);
+    }
+
+    return (st_mode == S_IFREG);
 }

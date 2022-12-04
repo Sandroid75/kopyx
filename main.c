@@ -62,11 +62,14 @@
 #include <libgen.h>
 #include <stdbool.h>
 #include <getopt.h>
+
+#define DEBUG
+
 #include "kopyx.h"
 
 int main(int argc, char *argv[]) {
-    char *pattern, *ptrstr, *sourcedir, *sourcefile, *destdir;
-    int opt, secarg, last;
+    char *sourcedir, *sourcefile, *destdir;
+    int opt;
     mode_t st_mode;
 
     opterr = true;
@@ -95,9 +98,9 @@ int main(int argc, char *argv[]) {
                 break;
             case '?': //the option entered is not valid
                 if(isprint(optopt)) {
-                    printf("\n%s invalid option %c\n", argv[0], (char) optopt);
+                    fprintf(stderr, "\n%s invalid option %c\n", argv[0], (char) optopt);
                 } else {
-                    printf("\n%s invalid option `\\x%x'\n", argv[0], optopt);
+                    fprintf(stderr, "\n%s invalid option `\\x%x'\n", argv[0], optopt);
                 }
                 arg_error();
                 break;
@@ -106,90 +109,50 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if(argc <= optind) {//no arguments were passed
+    if((argc - optind) < 2) {//no arguments were passed
         fprintf(stderr, "\n%s\nSpecify at least one source file or directory\n", argv[0]);
         arg_error();
-    } else if((argc - optind) > 2) {//too many arguments have been specified
+    } else if((argc - optind) > 3) {//too many arguments have been specified
         fprintf(stderr, "\n%s\nToo many arguments specify a source file or directory and possibly a destination directory\n", argv[0]);
         arg_error();
     }
 
-    pattern = strdup(argv[optind]); //duplicates the argument in pattern
-    st_mode = filetype(pattern); //assign st_mode a value to check if the argument is a directory or a file (may include the path to the file)
-    switch(st_mode) {
-        case S_IFREG: //if the argument contains a full path to a file
-            if(strcmp(dirname(pattern), "/")) { //verify that the dir is different from the root /
-                asprintf(&sourcedir, "%s/", dirname(pattern)); //builds the path by adding the final slash
-            } else {
-                sourcedir = strdup(dirname(pattern)); //returns only part of the pathname
-            }
-            sourcefile = strdup(basename(pattern)); //returns only the file name without path
-            free(pattern);
-            break;
-        case S_IFDIR: //if the argument contains a directory WITHOUT a file name
-            if(strcmp(pattern, "/")) { //verify that the dir is different from the root /
-                for(ptrstr = pattern; *ptrstr; ptrstr++); //increment the ptrstr pointer to the end of the string
-                ptrstr--; // now the ptrstr pointer will point to the last character of the pattern string
-                //the loop deletes all / characters at the end of the string
-                while(ptrstr != pattern && *ptrstr == '/') { //if ptrstr does not point to the beginning of the pattern string, then it is not the directory / and if the last character of the argument is /
-                    *ptrstr = '\0'; //then truncate the string by deleting the last character /
-                    ptrstr--; //decrements the pointer to the previous character
-                }
-                asprintf(&sourcedir, "%s/", pattern); //assign the path and add the slash
-            } else {
-                sourcedir = strdup(pattern); //duplicate the path
-            }
-            asprintf(&sourcefile, "*"); //a source file has not been specified will copy all the contents of the specified directory *
-            free(pattern);
-            break;
-        case false: //the file does not exist in the specified directory
-            if(!include_subdirs) { //if not specified to search subdirectories
-                fprintf(stderr, "\nFile \'%s\': does not exist in the specified directory, use -r to search sub-dirs\n", pattern);
-                free(pattern);
-                exit(1);
-            }
-            sourcedir = strdup(dirname(pattern)); //returns only part of the pathname
-            if(strcmp(sourcedir, "/")) {//verify that the dir is different from the root /
-                strcat(sourcedir, "/"); //adds the slash
-            }
-            sourcefile = strdup(basename(pattern)); //returns only the file name without path
-            free(pattern);
-            break;
-        default:
-            fprintf(stderr, "\nSource: \'%s\' invalid\n", pattern);
-            free(pattern);
-            exit(EXIT_FAILURE);
-            break;
+    if(isvalidfilename(argv[optind])) {
+        sourcefile = strdup(argv[optind]);
+        DBG_MSG("%s is a valid filename\n", sourcefile);
+    } else {
+        DBG_MSG("%s is NOT valid filename\n", argv[optind]);
+        exit(EXIT_FAILURE);
     }
 
-    if(sourcedir[0] != '.' && sourcedir[0] != '/') { //if the directory does not begin with. and it doesn't start with / adds a "./" at the beginning of the variable
-        asprintf(&pattern, "./%s", sourcedir);
-        free(sourcedir);
-        sourcedir = strdup(pattern);
-        free(pattern);
-    }
-    
-    if(!(argv[optind+1])) {//if not specified the destination defines the current dir
-        destdir = strdup("./");
+    st_mode = filetype(argv[optind +1]);
+    if(st_mode == S_IFDIR) {
+        sourcedir = buildpath(argv[optind +1]);
+        DBG_MSG("%s is a valid dirname\n", sourcedir)
     } else {
-        secarg = optind +1; //index of the second argument
-        last = strlen(argv[secarg]) -1; //points to the last character before NULL
-        
-        if(argv[secarg][last] != '/') { //verify that the last character is different from slash
-            asprintf(&pattern, "%s/", argv[secarg]); //adds a slash at the end of the path
-        } else {
-            pattern = strdup(argv[secarg]); //duplicate the path as it is
-        }
-        
-        if(pattern[0] != '.' && pattern[0] != '/') { //verify that the first character is not ne. neither /
-            asprintf(&destdir, "./%s", pattern); //inserts the ./ as a path relative to the current location
-        } else {
-            destdir = strdup(pattern); //duplicate the path as it is
-        }
-        free(pattern);
+        DBG_MSG("%s is NOT valid dirname\n", argv[optind +1]);
+        free(sourcefile);
+        exit(EXIT_FAILURE);
     }
-    
-    copyall(sourcedir, sourcefile, destdir); //main search and copy function
+
+    if((argc - optind) == 3) {
+        st_mode = filetype(argv[optind +2]);
+        if(st_mode == S_IFDIR) {
+            destdir = buildpath(argv[optind +2]);
+            DBG_MSG("%s is a valid dirname\n", destdir)
+        } else {
+            DBG_MSG("%s is NOT valid dirname\n", argv[optind +2]);
+            free(sourcefile);
+            free(sourcedir);
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        destdir = strdup("./");
+    }
+  
+DBG_MSG("sourcefile = [%s] - sourcedir = [%s] - destdir = [%s]\n", sourcefile, sourcedir, destdir);
+
+    //copyall(sourcefile, sourcedir, destdir); //main search and copy function
 
     if(!found_one) { //if the source file was not found
         fprintf(stderr, "No files found\n");

@@ -12,10 +12,10 @@
 				"-fdiagnostics-color=always",
 				"-ggdb",
 				"${fileDirname}/*.c",
-				"../findfirst/findfirst.c",
-				"../findfirst/spec.c",
 				"-o",
-				"${fileDirname}/kopyx"
+				"${fileDirname}/kopyx",
+				"-L../findfirst/",
+				"-lfindfirst"
 				//"-L../findfirst/"
 			],
 			"options": {
