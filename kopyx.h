@@ -59,7 +59,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "../findfirst/findfirst.h"
+#include <sys/types.h>
 
 #ifdef DEBUG
 #define DBG_MSG(msg, ...) { fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); }
@@ -67,23 +67,28 @@
 #define DBG_MSG(msg, ...) {}
 #endif
 
-void copyall(const char *filename, const char *fromdir, const char *todir);
-long long totalfilessize(const char *fromdir, const char *filename);
+#define PUTNC(n, c) { for(int i = 0; i < n; i++) { putchar(c); } }
+
+bool kopyx(const char *pattern, const char *fromdir, const char *todir);
+void doglob(const char *fullpath, const char *todir);
+void dosomething(const char *source, const char *dest);
+long long totalfilessize(const char *filename);
 long long totaldiskspace(const char *todir);
+void deletefile(const char *fname);
 void showtoscreen(const char *from);
 ssize_t filecopy(const char *source, const char *destination);
 void find(const char *fname);
-void closefiles(FILE *fptr, FILE *tptr);
 int opennew(const char *fname);
 int rm(const char *fname);
 void arg_error(void);
 int getyval(const char *msg);
-int file_info(const char *filename);
+bool file_info(const char *filename);
 mode_t filetype(const char *filename);
 char *buildpath(const char *dirname);
 bool isvalidfilename(const char *filename);
+bool diskspace(const char *source, const char *dest);
 
-static _Bool found_one = false, delete = false, find_only = false, verify = false, standardoutput = false, info = false, include_subdirs = false, noconfirm = false;
+static bool wildcard = false, found_one = false, delete = false, find_only = false, verify = false, standardoutput = false, info = false, include_subdirs = false, noconfirm = false;
 
 #define NSECT 64
 #define BYTES 512

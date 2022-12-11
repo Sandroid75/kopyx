@@ -11,12 +11,12 @@
 				"-O0",
 				"-fdiagnostics-color=always",
 				"-ggdb",
+				"-DDEBUG=1",
 				"${fileDirname}/*.c",
 				"-o",
-				"${fileDirname}/kopyx",
-				"-L../findfirst/",
-				"-lfindfirst"
-				//"-L../findfirst/"
+				"${fileDirname}/kopyx"
+				//"-L../findfirst/",
+				//"-lfindfirst"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"

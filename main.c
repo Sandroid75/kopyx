@@ -53,7 +53,6 @@
 **                                                                              **
 **********************************************************************************/
 
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -62,18 +61,16 @@
 #include <libgen.h>
 #include <stdbool.h>
 #include <getopt.h>
-
-#define DEBUG
-
+#include <sys/stat.h>
 #include "kopyx.h"
 
 int main(int argc, char *argv[]) {
-    char *sourcedir, *sourcefile, *destdir;
+    char *pattern, *fromdir, *todir;
     int opt;
     mode_t st_mode;
 
     opterr = true;
-    while((opt = getopt(argc, argv, "dfisvry")) != -1) { //sets all options passed on the command line
+    while((opt = getopt(argc, argv, "dfirvsy")) != -1) { //sets all options passed on the command line
         switch(opt) {
             case 'd': //delete source file if it has user confirmation (default does not delete source file)
                 delete = true;
@@ -109,61 +106,48 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if((argc - optind) < 2) {//no arguments were passed
-        fprintf(stderr, "\n%s\nSpecify at least one source file or directory\n", argv[0]);
+    if((argc - optind) < 2) { //no arguments were passed
+        fprintf(stderr, "\n%s\nSpecify at least one source file or directory!\n", argv[0]);
         arg_error();
-    } else if((argc - optind) > 3) {//too many arguments have been specified
-        fprintf(stderr, "\n%s\nToo many arguments specify a source file or directory and possibly a destination directory\n", argv[0]);
+    } else if((argc - optind) > 3) { //too many arguments have been specified
+        fprintf(stderr, "\n%s\nToo many arguments: specify options, source file, start directory and destination directory.\n", argv[0]);
         arg_error();
     }
 
-    if(isvalidfilename(argv[optind])) {
-        sourcefile = strdup(argv[optind]);
-        DBG_MSG("%s is a valid filename\n", sourcefile);
-    } else {
-        DBG_MSG("%s is NOT valid filename\n", argv[optind]);
+
+    pattern = argv[optind];
+    if(!isvalidfilename(pattern)) {
+        fprintf(stderr, "\n%s : is not valid file name!\n", pattern);
         exit(EXIT_FAILURE);
     }
 
-    st_mode = filetype(argv[optind +1]);
-    if(st_mode == S_IFDIR) {
-        sourcedir = buildpath(argv[optind +1]);
-        DBG_MSG("%s is a valid dirname\n", sourcedir)
-    } else {
-        DBG_MSG("%s is NOT valid dirname\n", argv[optind +1]);
-        free(sourcefile);
+    fromdir = buildpath(argv[optind +1]);
+    st_mode = filetype(fromdir);
+    if(st_mode != S_ISDIR) {
+        fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
         exit(EXIT_FAILURE);
     }
 
     if((argc - optind) == 3) {
-        st_mode = filetype(argv[optind +2]);
-        if(st_mode == S_IFDIR) {
-            destdir = buildpath(argv[optind +2]);
-            DBG_MSG("%s is a valid dirname\n", destdir)
-        } else {
-            DBG_MSG("%s is NOT valid dirname\n", argv[optind +2]);
-            free(sourcefile);
-            free(sourcedir);
+        todir = buildpath(argv[optind +2]);
+        st_mode = filetype(todir);
+        if(st_mode != S_ISDIR) {
             exit(EXIT_FAILURE);
         }
     } else {
-        destdir = strdup("./");
+        todir = strdup("./");
     }
   
-DBG_MSG("sourcefile = [%s] - sourcedir = [%s] - destdir = [%s]\n", sourcefile, sourcedir, destdir);
-
-    //copyall(sourcefile, sourcedir, destdir); //main search and copy function
+    kopyx(pattern, fromdir, todir); //main search and copy function
+    free(todir);
 
     if(!found_one) { //if the source file was not found
         fprintf(stderr, "No files found\n");
         if(!include_subdirs) { //if not specified to search subdirectories
-            fprintf(stderr, " if you use the -r option you can search the subdirectories of %s\n", sourcedir);
-            fprintf(stderr, " or you can specify /%s to search the entire disk.\n", sourcefile);
+            fprintf(stderr, " if you use the -r option you can search also the subdirectories of %s\n", fromdir);
+            fprintf(stderr, " or you can specify / to search the entire disk.\n");
         }
     }
-    free(sourcedir);
-    free(sourcefile);
-    free(destdir);
     
     exit(EXIT_SUCCESS);
 }
