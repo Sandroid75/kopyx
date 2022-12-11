@@ -52,6 +52,7 @@
 **                  Have fun with C programming by Sandroid75                   **
 **                                                                              **
 **********************************************************************************/
+#define _XOPEN_SOURCE 500 //S_IFDIR
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,8 +62,10 @@
 #include <libgen.h>
 #include <stdbool.h>
 #include <getopt.h>
-#include <sys/stat.h>
+
 #include "kopyx.h"
+
+bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
 
 int main(int argc, char *argv[]) {
     char *pattern, *fromdir, *todir;
@@ -70,10 +73,12 @@ int main(int argc, char *argv[]) {
     mode_t st_mode;
 
     opterr = true;
+    wildcard = found_one = delfile = find_only = verify = standardoutput = info = include_subdirs = noconfirm = false;
+
     while((opt = getopt(argc, argv, "dfirvsy")) != -1) { //sets all options passed on the command line
         switch(opt) {
             case 'd': //delete source file if it has user confirmation (default does not delete source file)
-                delete = true;
+                delfile = true;
                 break;
             case 'f': //search only (default also copies)
                 find_only = true;
@@ -114,7 +119,6 @@ int main(int argc, char *argv[]) {
         arg_error();
     }
 
-
     pattern = argv[optind];
     if(!isvalidfilename(pattern)) {
         fprintf(stderr, "\n%s : is not valid file name!\n", pattern);
@@ -123,7 +127,7 @@ int main(int argc, char *argv[]) {
 
     fromdir = buildpath(argv[optind +1]);
     st_mode = filetype(fromdir);
-    if(st_mode != S_ISDIR) {
+    if(st_mode != S_IFDIR) {
         fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
         exit(EXIT_FAILURE);
     }
@@ -131,7 +135,7 @@ int main(int argc, char *argv[]) {
     if((argc - optind) == 3) {
         todir = buildpath(argv[optind +2]);
         st_mode = filetype(todir);
-        if(st_mode != S_ISDIR) {
+        if(st_mode != S_IFDIR) {
             exit(EXIT_FAILURE);
         }
     } else {
@@ -148,6 +152,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, " or you can specify / to search the entire disk.\n");
         }
     }
+    free(fromdir);
     
     exit(EXIT_SUCCESS);
 }

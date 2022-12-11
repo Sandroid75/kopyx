@@ -76,7 +76,7 @@ long long totalfilessize(const char *filename);
 long long totaldiskspace(const char *todir);
 void deletefile(const char *fname);
 void showtoscreen(const char *from);
-ssize_t filecopy(const char *source, const char *destination);
+ssize_t filecopy(const char *source, const char *todir);
 void find(const char *fname);
 int opennew(const char *fname);
 int rm(const char *fname);
@@ -88,7 +88,7 @@ char *buildpath(const char *dirname);
 bool isvalidfilename(const char *filename);
 bool diskspace(const char *source, const char *dest);
 
-static bool wildcard = false, found_one = false, delete = false, find_only = false, verify = false, standardoutput = false, info = false, include_subdirs = false, noconfirm = false;
+//bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
 
 #define NSECT 64
 #define BYTES 512

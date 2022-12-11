@@ -59,6 +59,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -68,6 +69,8 @@
 #include <dirent.h>
 #include <glob.h>
 #include "kopyx.h"
+
+extern bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
 
 bool kopyx(const char *pattern, const char *fromdir, const char *todir) {
     DIR *dir;
@@ -88,17 +91,17 @@ bool kopyx(const char *pattern, const char *fromdir, const char *todir) {
                     continue;
                 }
                 if(wildcard) {
-                    sprintf(newpath, "%s%s", entry->d_name, pattern);
+                    sprintf(newpath, "%s%s/%s", fromdir, entry->d_name, pattern);
                     doglob(newpath, todir);
                 }
                 if(include_subdirs) { //if it has specified to also search in subdirectories
-                    sprintf(newpath, "%s/%s", fromdir, entry->d_name);
+                    sprintf(newpath, "%s%s/", fromdir, entry->d_name);
                     kopyx(pattern, newpath, todir);
                 }
                 break;
             case DT_REG: // This is a regular file.
                 if(!wildcard && (strcmp(pattern, entry->d_name) == 0)) {
-                    sprintf(newpath, "%s/%s", fromdir, pattern);
+                    sprintf(newpath, "%s%s", fromdir, pattern);
                     dosomething(newpath, todir); //do what user want
                 }
                 break;
@@ -119,10 +122,10 @@ bool kopyx(const char *pattern, const char *fromdir, const char *todir) {
 }
 
 void doglob(const char *fullpath, const char *todir) {
-    glob_t *pglob;
+    glob_t pglob;
     int flags = GLOB_ERR | GLOB_MARK | GLOB_NOSORT;
 
-    switch(glob(fullpath, flags, NULL, pglob)) {
+    switch(glob(fullpath, flags, NULL, &pglob)) {
         case GLOB_NOSPACE:
             fprintf(stderr, "\n%s: error running out of memory!\n", __func__);
             getyval("\nPress a key to continue...");
@@ -134,12 +137,12 @@ void doglob(const char *fullpath, const char *todir) {
         case GLOB_NOMATCH:
             break;
         default:
-            for(int i = 0; i < pglob->gl_pathc; i++) {
-                dosomething(pglob->gl_pathv[i], todir);
+            for(int i = 0; i < pglob.gl_pathc; i++) {
+                dosomething(pglob.gl_pathv[i], todir);
             }
             break;
     }
-    globfree(pglob);
+    globfree(&pglob);
 
     return;
 }
@@ -209,7 +212,7 @@ bool diskspace(const char *source, const char *dest) {
 }
 
 void deletefile(const char *fname) {
-    if(delete) {
+    if(delfile) {
         printf("\nFile: %s", fname);
         if(getyval(" - delete (Yes/No)?")) {
             if(!rm(fname)) {
@@ -251,12 +254,15 @@ void showtoscreen(const char *from) {
     return;
 }
 
-ssize_t filecopy(const char *source, const char *destination) {
+ssize_t filecopy(const char *source, const char *todir) {
     int input, output;
     struct stat fileinfo = { 0 };
 	ssize_t result = -1L;
     off_t bytesCopied = 0;
-	char *errnomsg;
+	char *errnomsg, *destination, *filename;
+
+    filename = basename(source);
+    asprintf(&destination, "%s%s", todir, filename);
 
     fprintf(stderr, "\nCoping %s -> %s", source, destination);
 
@@ -422,7 +428,7 @@ int rm(const char *fname) {
 }
 
 void find(const char *fname) {
-    printf("\nFound: %s", fname);
+    printf("\nFound: %s\n", fname);
     deletefile(fname);
     if(verify) {
         if(!getyval(" - continue (Yes/No)?")) {
@@ -434,7 +440,7 @@ void find(const char *fname) {
 }
 
 int opennew(const char *fname) {    
-    if(!access(fname, F_OK)) { //check if the target file already exists
+    if(access(fname, F_OK) == 0) { //check if the target file already exists
         fprintf(stderr, "\nWarning destination file %s exist\n", fname);
         if(!getyval("Overwrite (Yes/No)?")) { //confirm overwriting
             return -1;
@@ -533,9 +539,9 @@ bool file_info(const char *filename) {
     printf("Preferred I/O block size: %ld bytes\n", (long) sb.st_blksize);
     printf("File size:                %lld bytes\n", (long long) sb.st_size);
     printf("Blocks allocated:         %lld\n", (long long) sb.st_blocks);
-    printf("Last status change:       %s\n", ctime(&sb.st_ctime));
-    printf("Last file access:         %s\n", ctime(&sb.st_atime));
-    printf("Last file modification:   %s\n", ctime(&sb.st_mtime));
+    printf("Last status change:       %s", ctime(&sb.st_ctime));
+    printf("Last file access:         %s", ctime(&sb.st_atime));
+    printf("Last file modification:   %s", ctime(&sb.st_mtime));
     PUTNC(50, '*');
     putchar('\n');
 
@@ -562,12 +568,10 @@ char *buildpath(const char *dirname) {
     }
 
     if(half_path[strlen(half_path) -1] != '/') { //verify that the last character is different from slash
-        sprintf(path, "%s/", half_path); //adds a slash at the end of the path
+        asprintf(&path, "%s/", half_path); //adds a slash at the end of the path
     } else {
         path = strdup(half_path); //duplicate the path as it is
     }
-    
-    free(half_path);
 
     return path;
 }
