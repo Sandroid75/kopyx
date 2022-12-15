@@ -69,9 +69,9 @@
 
 #define PUTNC(n, c) { for(int i = 0; i < n; i++) { putchar(c); } }
 
-bool kopyx(const char *pattern, const char *fromdir, const char *todir);
-void doglob(const char *fullpath, const char *todir);
-void dosomething(const char *source, const char *dest);
+bool kopyx(const char *fromdir);
+void doglob(const char *fullpath);
+void dosomething(const char *source);
 long long totalfilessize(const char *filename);
 long long totaldiskspace(const char *todir);
 void deletefile(const char *fname);

@@ -62,15 +62,19 @@
 #include <libgen.h>
 #include <stdbool.h>
 #include <getopt.h>
+#include <sys/stat.h>
 
 #include "kopyx.h"
 
 bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
+char *pattern, *todir;
+ino_t todir_inode;
 
-int main(int argc, char *argv[]) {
-    char *pattern, *fromdir, *todir;
+int main(int argc, char *argv[]) {    
+    char *fromdir;
     int opt;
     mode_t st_mode;
+    struct stat sb;
 
     opterr = true;
     wildcard = found_one = delfile = find_only = verify = standardoutput = info = include_subdirs = noconfirm = false;
@@ -136,13 +140,19 @@ int main(int argc, char *argv[]) {
         todir = buildpath(argv[optind +2]);
         st_mode = filetype(todir);
         if(st_mode != S_IFDIR) {
+        fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
             exit(EXIT_FAILURE);
         }
     } else {
         todir = strdup("./");
     }
+    if(lstat(todir, &sb) == -1) {
+            fprintf(stderr, "\n%s : error reading i-node number!\n", todir);
+            exit(EXIT_FAILURE);
+    }
+    todir_inode = (ino_t) sb.st_ino;
   
-    kopyx(pattern, fromdir, todir); //main search and copy function
+    kopyx(fromdir); //main search and copy function
     free(todir);
 
     if(!found_one) { //if the source file was not found

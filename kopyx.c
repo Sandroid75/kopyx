@@ -71,8 +71,10 @@
 #include "kopyx.h"
 
 extern bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
+extern char *pattern, *todir;
+extern ino_t todir_inode;
 
-bool kopyx(const char *pattern, const char *fromdir, const char *todir) {
+bool kopyx(const char *fromdir) {
     DIR *dir;
     struct dirent *entry;
     char newpath[FILENAME_MAX];
@@ -87,22 +89,22 @@ bool kopyx(const char *pattern, const char *fromdir, const char *todir) {
     while((entry = readdir(dir))) {
         switch(entry->d_type) {
             case DT_DIR: // It's a directory.
-                if(!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) {
+                if(entry->d_ino == todir_inode || !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) {
                     continue;
                 }
                 if(wildcard) {
                     sprintf(newpath, "%s%s/%s", fromdir, entry->d_name, pattern);
-                    doglob(newpath, todir);
+                    doglob(newpath);
                 }
                 if(include_subdirs) { //if it has specified to also search in subdirectories
                     sprintf(newpath, "%s%s/", fromdir, entry->d_name);
-                    kopyx(pattern, newpath, todir);
+                    kopyx(newpath);
                 }
                 break;
             case DT_REG: // This is a regular file.
                 if(!wildcard && (strcmp(pattern, entry->d_name) == 0)) {
                     sprintf(newpath, "%s%s", fromdir, pattern);
-                    dosomething(newpath, todir); //do what user want
+                    dosomething(newpath); //do what user want
                 }
                 break;
             case DT_BLK: // This is a block device.
@@ -121,7 +123,7 @@ bool kopyx(const char *pattern, const char *fromdir, const char *todir) {
     return true;
 }
 
-void doglob(const char *fullpath, const char *todir) {
+void doglob(const char *fullpath) {
     glob_t pglob;
     int flags = GLOB_ERR | GLOB_MARK | GLOB_NOSORT;
 
@@ -138,7 +140,7 @@ void doglob(const char *fullpath, const char *todir) {
             break;
         default:
             for(int i = 0; i < pglob.gl_pathc; i++) {
-                dosomething(pglob.gl_pathv[i], todir);
+                dosomething(pglob.gl_pathv[i]);
             }
             break;
     }
@@ -147,7 +149,7 @@ void doglob(const char *fullpath, const char *todir) {
     return;
 }
 
-void dosomething(const char *source, const char *dest) {
+void dosomething(const char *source) {
     found_one = true;
 
     if(info) { //if it specified to show file info
@@ -158,8 +160,8 @@ void dosomething(const char *source, const char *dest) {
         find(source);
     } else if(standardoutput) { //redirect the output to the screen
         showtoscreen(source);
-    } else if(diskspace(source, dest)) {
-        filecopy(source, dest); //copy the file to the destination
+    } else if(diskspace(source, todir)) {
+        filecopy(source, todir); //copy the file to the destination
     }else {
         fprintf(stderr, "\n%s: Unknown error!\n", __func__);
         getyval("\nPress a key to continue...");
@@ -264,7 +266,7 @@ ssize_t filecopy(const char *source, const char *todir) {
     filename = basename(source);
     asprintf(&destination, "%s%s", todir, filename);
 
-    fprintf(stderr, "\nCoping %s -> %s", source, destination);
+    fprintf(stderr, "\nCoping %s -> %s\n", source, destination);
 
     if(verify) { //if the user specified -v
         if(!getyval(" - copy (Yes/No)?")) {
