@@ -12,9 +12,9 @@
 				"-fdiagnostics-color=always",
 				"-ggdb",
 				"-DDEBUG=1",
-				"${fileDirname}/*.c",
+				"${workspaceFolder}/src/*.c",
 				"-o",
-				"${fileDirname}/kopyx"
+				"${workspaceFolder}/kopyx"
 				//"-L../findfirst/",
 				//"-lfindfirst"
 			],
