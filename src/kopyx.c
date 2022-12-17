@@ -76,6 +76,8 @@ void doglob(const char *fullpath) {
 }
 
 void dosomething(const char *source) {
+    ssize_t bytes;
+
     found_one = true;
 
     if(info) { //if it specified to show file info
@@ -87,83 +89,17 @@ void dosomething(const char *source) {
     } else if(standardoutput) { //redirect the output to the screen
         showtoscreen(source);
     } else if(diskspace(source, todir)) {
-        filecopy(source, todir); //copy the file to the destination
+        printf("\nCoping %s -> %s\n", source, todir);
+        bytes = filecopy(source, todir); //copy the file to the destination
+        if(bytes < 0) {
+            fprintf(stderr, "\nWarning: impossible coping %s to %s !\n", source, todir);
+            getyval("Press any key to continue...");
+        } else {
+            printf("%ld byte%scopied...\n", bytes, (bytes > 1L) ? "s " : " ");
+        }
     }else {
         fprintf(stderr, "\n%s: Unknown error!\n", __func__);
         getyval("\nPress a key to continue...");
-    }
-
-    return;
-}
-
-bool diskspace(const char *source, const char *dest) {
-    ssize_t totalfilebytes, diskavailbytes;
-
-    totalfilebytes = totalfilessize(source); //calculate file size
-    diskavailbytes = totaldiskspace(dest); //calculates the total space on the destination disk
-
-    if(diskavailbytes <= totalfilebytes) {
-        fprintf(stderr, "\nInsufficient space on: \n%s\n\nplease free some space before trying again.", dest);
-        fprintf(stderr, "Total space required for the copy: %ld bytes\n", totalfilebytes);
-        fprintf(stderr, "Space available on the destination drive: %ld bytes\n", diskavailbytes);
-        fprintf(stderr, "Minimum space to free before copying: %ld bytes\n", diskavailbytes - totalfilebytes);
-
-        return false;
-    }
-
-    return true;
-}
-
-void deletefile(const char *fname) {
-    if(delfile) {
-        printf("\nFile: %s", fname);
-        if(getyval(" - delete (Yes/No)?")) {
-            if(!rm(fname)) {
-                printf("deleted!\n");
-            }
-        }
-    }
-
-    return;  
-}
-
-void showtoscreen(const char *from) {
-    size_t bytes;
-    char buffer[NSECT * BYTES];
-    FILE *fptr;
-    
-    if(verify) {
-        printf("File: %s", from);
-        if(!getyval(" - Show (Yes/No)?")) {
-            return;
-        }
-        printf("\n");
-    }
-
-    fptr = fopen(from, "r");
-    if(!fptr) {
-        fprintf(stderr, "\n%s: Error opening file %s\n", __func__, from);
-        getyval("\nPress a key to continue...");
-        
-        return;
-    }
-
-    while((bytes = fread(buffer, sizeof(char), NSECT * BYTES, fptr)) > 0) {
-        fwrite(buffer, sizeof(char), bytes, stdout);
-    }
-    fclose(fptr);
-    deletefile(from);
-    
-    return;
-}
-
-void find(const char *fname) {
-    printf("\nFound: %s\n", fname);
-    deletefile(fname);
-    if(verify) {
-        if(!getyval(" - continue (Yes/No)?")) {
-            exit(EXIT_SUCCESS);
-        }
     }
 
     return;

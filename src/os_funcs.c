@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "os_funcs.h"
 
 long long totalfilessize(const char *filename) {
@@ -38,9 +39,11 @@ mode_t filetype(const char *filename) {
 int opennew(const char *fname) {    
     if(access(fname, F_OK) == 0) { //check if the target file already exists
         fprintf(stderr, "\nWarning destination file %s exist\n", fname);
-        if(!getyval("Overwrite (Yes/No)?")) { //confirm overwriting
+        if(getyval("Overwrite (Yes/No)?")) { //confirm overwriting
+            rm(fname);
+        } else {
             return -1;
-        }        
+        }      
     }
  
     return open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0600);
@@ -53,10 +56,13 @@ ssize_t filecopy(const char *source, const char *todir) {
     off_t bytesCopied = 0;
 	char *errnomsg, *filename, destination[FILENAME_MAX];
 
-    filename = basename(source);
-    sprintf(destination, "%s%s", todir, filename);
-
-    fprintf(stderr, "\nCoping %s -> %s\n", source, destination);
+    errnomsg = strdup(source); // duplicate because of basename() modify the string
+printf("source [%s] errnomsg [%s]\n", source, errnomsg);
+    filename = basename(errnomsg);
+printf("filename [%s] errnomsg [%s] todir [%s]\n", filename, errnomsg, todir);
+    sprintf(destination, "%s%s", todir, filename); //build complete destination path dir+fname
+printf("destination [%s] todir [%s] filename [%s]\n", destination, todir, filename);
+    free(filename);
 
     if(verify) { //if the user specified -v
         if(!getyval(" - copy (Yes/No)?")) {
@@ -157,7 +163,7 @@ ssize_t filecopy(const char *source, const char *todir) {
 	}
 	if(result != fileinfo.st_size) { //verify that all bytes have been copied
 		fprintf(stderr, "\n%s: Error not all data was copied!\nWrited %ld bytes on %ld bytes\n", __func__, result, fileinfo.st_size);
-        result = getyval("Continue (Yes/No)?") ? result : -1L; //if the user confirms, the copying of other files continues
+        result = (getyval("Continue (Yes/No)?") ? result : -1L); //if the user confirms, the copying of other files continues
 	}
 
     close(input); //close the handle

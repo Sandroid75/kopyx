@@ -1,5 +1,3 @@
-#define _XOPEN_SOURCE 500 //S_IFDIR
-
 #include "kopyx.h"
 
 bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;

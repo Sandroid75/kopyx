@@ -1,4 +1,5 @@
 #include "ui_funcs.h"
+#include "os_funcs.h"
 
 int getyval(const char *msg) {
     char entered;
@@ -14,6 +15,79 @@ int getyval(const char *msg) {
     }
         
     return (tolower(entered) == 'y'); //return true if user input 'Y' or 'y'
+}
+
+bool diskspace(const char *source, const char *dest) {
+    ssize_t totalfilebytes, diskavailbytes;
+
+    totalfilebytes = totalfilessize(source); //calculate file size
+    diskavailbytes = totaldiskspace(dest); //calculates the total space on the destination disk
+
+    if(diskavailbytes <= totalfilebytes) {
+        fprintf(stderr, "\nInsufficient space on: \n%s\n\nplease free some space before trying again.", dest);
+        fprintf(stderr, "Total space required for the copy: %ld bytes\n", totalfilebytes);
+        fprintf(stderr, "Space available on the destination drive: %ld bytes\n", diskavailbytes);
+        fprintf(stderr, "Minimum space to free before copying: %ld bytes\n", diskavailbytes - totalfilebytes);
+
+        return false;
+    }
+
+    return true;
+}
+
+void showtoscreen(const char *from) {
+    size_t bytes;
+    char buffer[NSECT * BYTES];
+    FILE *fptr;
+    
+    if(verify) {
+        printf("File: %s", from);
+        if(!getyval(" - Show (Yes/No)?")) {
+            return;
+        }
+        printf("\n");
+    }
+
+    fptr = fopen(from, "r");
+    if(!fptr) {
+        fprintf(stderr, "\n%s: Error opening file %s\n", __func__, from);
+        getyval("\nPress a key to continue...");
+        
+        return;
+    }
+
+    while((bytes = fread(buffer, sizeof(char), NSECT * BYTES, fptr)) > 0) {
+        fwrite(buffer, sizeof(char), bytes, stdout);
+    }
+    fclose(fptr);
+    deletefile(from);
+    
+    return;
+}
+
+void find(const char *fname) {
+    printf("\nFound: %s\n", fname);
+    deletefile(fname);
+    if(verify) {
+        if(!getyval(" - continue (Yes/No)?")) {
+            exit(EXIT_SUCCESS);
+        }
+    }
+
+    return;
+}
+
+void deletefile(const char *fname) {
+    if(delfile) {
+        printf("\nFile: %s", fname);
+        if(getyval(" - delete (Yes/No)?")) {
+            if(!rm(fname)) {
+                printf("deleted!\n");
+            }
+        }
+    }
+
+    return;  
 }
 
 void arg_error(void) {
