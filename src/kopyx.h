@@ -20,6 +20,8 @@ bool kopyx(const char *fromdir);
 void doglob(const char *fullpath);
 /* does what the user specified to do on the found file */
 void dosomething(const char *source);
+/* verify if haystack match with wildcard in needle */
+bool wildcards(const char *haystack, const char *needle);
 
 extern bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
 extern char *pattern, *todir;

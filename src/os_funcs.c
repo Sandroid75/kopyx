@@ -39,7 +39,8 @@ mode_t filetype(const char *filename) {
 int opennew(const char *fname) {    
     if(access(fname, F_OK) == 0) { //check if the target file already exists
         fprintf(stderr, "\nWarning destination file %s exist\n", fname);
-        if(getyval("Overwrite (Yes/No)?")) { //confirm overwriting
+        if(getyval("Overwrite (Yes/No)? ")) { //confirm overwriting
+            fprintf(stderr, "Overwriting...\n");
             rm(fname);
         } else {
             return -1;
@@ -56,13 +57,8 @@ ssize_t filecopy(const char *source, const char *todir) {
     off_t bytesCopied = 0;
 	char *errnomsg, *filename, destination[FILENAME_MAX];
 
-    errnomsg = strdup(source); // duplicate because of basename() modify the string
-printf("source [%s] errnomsg [%s]\n", source, errnomsg);
-    filename = basename(errnomsg);
-printf("filename [%s] errnomsg [%s] todir [%s]\n", filename, errnomsg, todir);
-    sprintf(destination, "%s%s", todir, filename); //build complete destination path dir+fname
-printf("destination [%s] todir [%s] filename [%s]\n", destination, todir, filename);
-    free(filename);
+    filename = strdup(source); // duplicate because of basename() modify the string
+    sprintf(destination, "%s%s", todir, basename(filename)); //build complete destination path dir+fname
 
     if(verify) { //if the user specified -v
         if(!getyval(" - copy (Yes/No)?")) {
@@ -120,7 +116,7 @@ printf("destination [%s] todir [%s] filename [%s]\n", destination, todir, filena
 
     if((output = opennew(destination)) == -1) { //try to open the target file
         close(input);
-        fprintf(stderr, "\n%s: Write error: %s\n", __func__, destination);
+        //fprintf(stderr, "\n%s: Write error: %s\n", __func__, destination);
 
         return result;
     }

@@ -4,6 +4,7 @@ bool kopyx(const char *fromdir) {
     DIR *dir;
     struct dirent *entry;
     char newpath[FILENAME_MAX];
+    bool match;
 
     if(!(dir = opendir(fromdir))) {
         fprintf(stderr, "\n%s: Error opening directory: %s\n", __func__, fromdir);
@@ -18,18 +19,27 @@ bool kopyx(const char *fromdir) {
                 if(entry->d_ino == todir_inode || !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) {
                     continue;
                 }
+/* 
                 if(wildcard) {
-                    sprintf(newpath, "%s%s/%s", fromdir, entry->d_name, pattern);
+                    sprintf(newpath, "%s%s", fromdir, pattern);
                     doglob(newpath);
                 }
+ */
                 if(include_subdirs) { //if it has specified to also search in subdirectories
                     sprintf(newpath, "%s%s/", fromdir, entry->d_name);
                     kopyx(newpath);
                 }
                 break;
             case DT_REG: // This is a regular file.
-                if(!wildcard && (strcmp(pattern, entry->d_name) == 0)) {
-                    sprintf(newpath, "%s%s", fromdir, pattern);
+                if(wildcard) { // pattern contain wildcards like '*' or '?'
+printf("%s\n", entry->d_name);
+                    match = wildcards(entry->d_name, pattern);
+                } else {
+                    match = (strcmp(entry->d_name, pattern) == 0) ;
+                }
+                
+                if(match) {
+                    sprintf(newpath, "%s%s", fromdir, entry->d_name);
                     dosomething(newpath); //do what user want
                 }
                 break;
@@ -89,11 +99,12 @@ void dosomething(const char *source) {
     } else if(standardoutput) { //redirect the output to the screen
         showtoscreen(source);
     } else if(diskspace(source, todir)) {
-        printf("\nCoping %s -> %s\n", source, todir);
+        printf("Coping %s -> %s\n", source, todir);
         bytes = filecopy(source, todir); //copy the file to the destination
         if(bytes < 0) {
-            fprintf(stderr, "\nWarning: impossible coping %s to %s !\n", source, todir);
+            fprintf(stderr, "\nWarning: impossible coping %s to %s\n", source, todir);
             getyval("Press any key to continue...");
+            puts("\n");
         } else {
             printf("%ld byte%scopied...\n", bytes, (bytes > 1L) ? "s " : " ");
         }
@@ -103,4 +114,11 @@ void dosomething(const char *source) {
     }
 
     return;
+}
+
+bool wildcards(const char *haystack, const char *needle) {
+    return (bool) *haystack - 42 ? *needle ? (63 == *haystack) |
+            (*needle == *haystack) &&
+            wildcards(needle +1, haystack +1) : !*haystack : wildcards(needle, haystack +1) ||
+            (*needle && wildcards(needle +1, haystack));
 }
