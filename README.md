@@ -3,7 +3,7 @@ This is a old project writed in 1991 for DOS 3.3 (Kopy was the original name)
 This is the Linux version with some modern improvments.
 Developed with VSCode, open the project folder and press Ctrl+Shift+B to build it.
 
-/*********************************************************************************
+**********************************************************************************
 **                                                                              **
 **      Copyleft 1991-2022 by Sandroid75 with GNU General Public License.       **
 **                                                                              **
@@ -56,4 +56,4 @@ Developed with VSCode, open the project folder and press Ctrl+Shift+B to build i
 **                                                                              **
 **                  Have fun with C programming by Sandroid75                   **
 **                                                                              **
-**********************************************************************************/
+**********************************************************************************
