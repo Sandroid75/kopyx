@@ -36,8 +36,13 @@ mode_t filetype(const char *filename) {
     return (sb.st_mode & S_IFMT);
 }
 
-int opennew(const char *fname) {    
+int opennew(const char *fname, ino_t source_inode) {    
     if(access(fname, F_OK) == 0) { //check if the target file already exists
+        if(inodeof(fname) == source_inode) {
+            printf("Skip coping suource file coincide with destination file!\n");
+
+            return -1;
+        }
         fprintf(stderr, "Warning destination file %s exist\n", fname);
         if(getyval("Overwrite (Yes/No)? ")) { //confirm overwriting
             fprintf(stderr, "Overwriting...\n");
@@ -62,7 +67,6 @@ ssize_t filecopy(const char *source, const char *todir) {
 
     if(verify) { //if the user specified -v
         if(!getyval(" - copy (Yes/No)?")) {
-
             return result;
         }
     }
@@ -115,7 +119,7 @@ ssize_t filecopy(const char *source, const char *todir) {
         return result;
     }
 
-    if((output = opennew(destination)) == -1) { //try to open the target file
+    if((output = opennew(destination, inodeof(source))) == -1) { //try to open the destinatiion file
         close(input);
 
         return result;
@@ -355,8 +359,8 @@ bool isvalidfilename(const char *filename) {
 ino_t inodeof(const char *filename) {
     struct stat sb;
 
-    if(lstat(todir, &sb) == -1) {
-            fprintf(stderr, "\n%s : error reading i-node number!\n", todir);
+    if(lstat(filename, &sb) == -1) {
+            fprintf(stderr, "\n%s : error reading i-node number!\n", filename);
             free(todir);
 
             exit(EXIT_FAILURE);

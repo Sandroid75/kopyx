@@ -35,10 +35,10 @@ returns the file type with mask of & S_IFMT
 */
 mode_t filetype(const char *filename);
 /*
-open a new file
+check if fname exist and coincide with suorce_inode than open a new file 
 return the handle or -1 in case of error
 */
-int opennew(const char *fname);
+int opennew(const char *fname, ino_t source_inode);
 /*
 perform a copy of the specified file to destination direcory
 return the size of bytes copied or -1L in case of error

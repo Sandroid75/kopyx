@@ -96,7 +96,8 @@ void find(const char *fname) {
 
 void deletefile(const char *fname) {
     if(delfile) {
-        printf("\nFile: %s", fname);
+        printf("File: %s", fname);
+        fflush(stdout);
         if(getyval(" - delete (Yes/No)? ")) {
             if(!rm(fname)) {
                 printf("deleted!\n");
