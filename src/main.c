@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
     free(fromdir);
 
     if(found_one > 1 && totalbytescopied > 0) {
-        printf("\n%ld total byte%scopied...\n", totalbytescopied, (totalbytescopied > 1L) ? "s " : " ");
+        printf("\n%ld total bytes copied in %d files...\n", totalbytescopied, found_one);
     }
     
     exit(EXIT_SUCCESS);
