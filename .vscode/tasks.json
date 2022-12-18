@@ -15,8 +15,6 @@
 				"${workspaceFolder}/src/*.c",
 				"-o",
 				"${workspaceFolder}/kopyx"
-				//"-L../findfirst/",
-				//"-lfindfirst"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
