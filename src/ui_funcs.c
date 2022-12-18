@@ -1,6 +1,22 @@
 #include "ui_funcs.h"
 #include "os_funcs.h"
 
+int getch(FILE *streamin) {
+    struct termios ttystate, ttynew;
+    int cin;
+    
+    tcgetattr(STDIN_FILENO, &ttystate);         //get the terminal state
+    ttynew = ttystate;                          //store original terminal mode
+    ttynew.c_lflag &= ~ICANON & ~ECHO;          //turn OFF canonical mode and echo mode
+    tcsetattr(STDIN_FILENO, TCSANOW, &ttynew);  //set the terminal attributes
+
+    cin = fgetc(streamin);                      //get char from streamin
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);//restore previuos terminal mode
+    
+    return cin;
+}
+
 int getyval(const char *msg) {
     char entered;
 
@@ -9,7 +25,7 @@ int getyval(const char *msg) {
     }
     
     fprintf(stderr, "%s", msg);
-    entered = getchar();
+    entered = getch(stdin);
     if(entered == 0x03) {
         exit(EXIT_FAILURE);
     }
@@ -42,7 +58,7 @@ void showtoscreen(const char *from) {
     
     if(verify) {
         printf("File: %s", from);
-        if(!getyval(" - Show (Yes/No)?")) {
+        if(!getyval(" - Show (Yes/No)? ")) {
             return;
         }
         printf("\n");
@@ -51,7 +67,8 @@ void showtoscreen(const char *from) {
     fptr = fopen(from, "r");
     if(!fptr) {
         fprintf(stderr, "\n%s: Error opening file %s\n", __func__, from);
-        getyval("\nPress a key to continue...");
+        getyval("Press a key to continue...");
+        puts("\n");
         
         return;
     }
@@ -69,7 +86,7 @@ void find(const char *fname) {
     printf("\nFound: %s\n", fname);
     deletefile(fname);
     if(verify) {
-        if(!getyval(" - continue (Yes/No)?")) {
+        if(!getyval(" - continue (Yes/No)? ")) {
             exit(EXIT_SUCCESS);
         }
     }
@@ -80,7 +97,7 @@ void find(const char *fname) {
 void deletefile(const char *fname) {
     if(delfile) {
         printf("\nFile: %s", fname);
-        if(getyval(" - delete (Yes/No)?")) {
+        if(getyval(" - delete (Yes/No)? ")) {
             if(!rm(fname)) {
                 printf("deleted!\n");
             }
@@ -113,7 +130,8 @@ void arg_error(void) {
 
     fprintf(stderr, "%s", errmsg);
 
-    //getyval("\nPress a key to continue...");
+    getyval("Press a key to continue...");
+    puts("\n");
     
     exit(EXIT_FAILURE);
 }

@@ -1,17 +1,18 @@
 #include "kopyx.h"
 
-bool wildcard, found_one, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
+bool wildcard, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
+int found_one;
 char *pattern, *todir;
 ino_t todir_inode;
+ssize_t totalbytescopied;
 
 int main(int argc, char *argv[]) {    
     char *fromdir;
     int opt;
     mode_t st_mode;
-    struct stat sb;
 
     opterr = true;
-    wildcard = found_one = delfile = find_only = verify = standardoutput = info = include_subdirs = noconfirm = false;
+    wildcard = delfile = find_only = verify = standardoutput = info = include_subdirs = noconfirm = false;
 
     while((opt = getopt(argc, argv, "dfirvsy")) != -1) { //sets all options passed on the command line
         switch(opt) {
@@ -60,6 +61,7 @@ int main(int argc, char *argv[]) {
     pattern = argv[optind];
     if(!isvalidfilename(pattern)) {
         fprintf(stderr, "\n%s : is not valid file name!\n", pattern);
+
         exit(EXIT_FAILURE);
     }
 
@@ -67,6 +69,8 @@ int main(int argc, char *argv[]) {
     st_mode = filetype(fromdir);
     if(st_mode != S_IFDIR) {
         fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
+        free(fromdir);
+
         exit(EXIT_FAILURE);
     }
 
@@ -74,18 +78,19 @@ int main(int argc, char *argv[]) {
         todir = buildpath(argv[optind +2]);
         st_mode = filetype(todir);
         if(st_mode != S_IFDIR) {
-        fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
+            fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
+            free(fromdir);
+            free(todir);
+
             exit(EXIT_FAILURE);
         }
     } else {
         todir = strdup("./");
     }
-    if(lstat(todir, &sb) == -1) {
-            fprintf(stderr, "\n%s : error reading i-node number!\n", todir);
-            exit(EXIT_FAILURE);
-    }
-    todir_inode = (ino_t) sb.st_ino;
-  
+
+    todir_inode = inodeof(todir); //in order to skip the dest directory from search
+    totalbytescopied = -1L;
+    found_one = 0;
     kopyx(fromdir); //main search and copy function
     free(todir);
 
@@ -97,6 +102,10 @@ int main(int argc, char *argv[]) {
         }
     }
     free(fromdir);
+
+    if(found_one > 1 && totalbytescopied > 0) {
+        printf("\n%ld total byte%scopied...\n", totalbytescopied, (totalbytescopied > 1L) ? "s " : " ");
+    }
     
     exit(EXIT_SUCCESS);
 }

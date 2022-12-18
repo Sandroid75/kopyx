@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include "os_funcs.h"
 
 long long totalfilessize(const char *filename) {
@@ -7,7 +6,8 @@ long long totalfilessize(const char *filename) {
 
     if(fp == NULL) {
         fprintf(stderr, "\n%s: Error opening %s\n", __func__, filename);
-        getyval("\nPress a key to continue...");
+        getyval("Press a key to continue...");
+        puts("\n");
 
         exit(EXIT_FAILURE);
     }
@@ -38,7 +38,7 @@ mode_t filetype(const char *filename) {
 
 int opennew(const char *fname) {    
     if(access(fname, F_OK) == 0) { //check if the target file already exists
-        fprintf(stderr, "\nWarning destination file %s exist\n", fname);
+        fprintf(stderr, "Warning destination file %s exist\n", fname);
         if(getyval("Overwrite (Yes/No)? ")) { //confirm overwriting
             fprintf(stderr, "Overwriting...\n");
             rm(fname);
@@ -69,7 +69,8 @@ ssize_t filecopy(const char *source, const char *todir) {
 
     if((input = open(source, O_RDONLY)) == -1) { //try opening the source file
         fprintf(stderr, "\n%s: File open error: %s\n", __func__, source);
-        getyval("\nPress a key to continue...");
+        getyval("Press a key to continue...");
+        puts("\n");
 
         return result;
     }
@@ -116,7 +117,6 @@ ssize_t filecopy(const char *source, const char *todir) {
 
     if((output = opennew(destination)) == -1) { //try to open the target file
         close(input);
-        //fprintf(stderr, "\n%s: Write error: %s\n", __func__, destination);
 
         return result;
     }
@@ -350,4 +350,17 @@ bool isvalidfilename(const char *filename) {
     }
 
     return (st_mode == S_IFREG);
+}
+
+ino_t inodeof(const char *filename) {
+    struct stat sb;
+
+    if(lstat(todir, &sb) == -1) {
+            fprintf(stderr, "\n%s : error reading i-node number!\n", todir);
+            free(todir);
+
+            exit(EXIT_FAILURE);
+    }
+
+    return (ino_t) sb.st_ino;
 }
