@@ -68,7 +68,7 @@ void dosomething(const char *source) {
         printf("Coping %s -> %s\n", source, todir);
         bytes = filecopy(source, todir); //copy the file to the destination
         if(bytes < 0) {
-            fprintf(stderr, "Warning: impossible coping %s to %s\n", source, todir);
+            fprintf(stderr, "\nWarning: impossible coping %s to %s\n", source, todir);
             getyval("Press any key to continue...");
             puts("\n");
         } else {

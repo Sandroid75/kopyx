@@ -327,7 +327,7 @@ bool isvalidfilename(const char *filename) {
 
     temp_dir = mkdtemp(dir_template);
     if(temp_dir == NULL) { //creating temp dir
-        fprintf(stderr, "\nError creating temporary directory %s", temp_dir);
+        fprintf(stderr, "\nError creating temporary directory %s", dir_template);
         exit(EXIT_FAILURE);
     }
     sprintf(temp_file, "%s/%s", temp_dir, filename);

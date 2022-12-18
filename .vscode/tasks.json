@@ -8,15 +8,13 @@
 			"args": [
 				"-std=gnu17",
 				"-Wall",
-				"-O0",
+				"-O3",
 				"-fdiagnostics-color=always",
-				"-ggdb",
-				"-DDEBUG=1",
+				//"-ggdb",
+				//"-DDEBUG=1",
 				"${workspaceFolder}/src/*.c",
 				"-o",
 				"${workspaceFolder}/kopyx"
-				//"-L../findfirst/",
-				//"-lfindfirst"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"

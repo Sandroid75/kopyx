@@ -83,7 +83,7 @@ void showtoscreen(const char *from) {
 }
 
 void find(const char *fname) {
-    printf("\nFound: %s\n", fname);
+    printf("Found: %s\n", fname);
     deletefile(fname);
     if(verify) {
         if(!getyval(" - continue (Yes/No)? ")) {
@@ -100,7 +100,7 @@ void deletefile(const char *fname) {
         fflush(stdout);
         if(getyval(" - delete (Yes/No)? ")) {
             if(!rm(fname)) {
-                printf("deleted!\n");
+                printf(" deleted!\n");
             }
         }
     }
