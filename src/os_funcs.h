@@ -36,7 +36,7 @@ returns the file type with mask of & S_IFMT
 mode_t filetype(const char *filename);
 /*
 check if fname exist and coincide with suorce_inode than open a new file 
-return the handle or -1 in case of error
+return the handle or -1 in case of error, -2 if source == dest, -3 user dont want overwriting
 */
 int opennew(const char *fname, ino_t source_inode);
 /*

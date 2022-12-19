@@ -7,7 +7,7 @@ long long totalfilessize(const char *filename) {
     if(fp == NULL) {
         fprintf(stderr, "\n%s: Error opening %s\n", __func__, filename);
         getyval("Press a key to continue...");
-        puts("\n");
+        puts("");
 
         exit(EXIT_FAILURE);
     }
@@ -39,16 +39,14 @@ mode_t filetype(const char *filename) {
 int opennew(const char *fname, ino_t source_inode) {    
     if(access(fname, F_OK) == 0) { //check if the target file already exists
         if(inodeof(fname) == source_inode) {
-            printf("Skip coping suource file coincide with destination file!\n");
-
-            return -1;
+            return -2;
         }
         fprintf(stderr, "Warning destination file %s exist\n", fname);
         if(getyval("Overwrite (Yes/No)? ")) { //confirm overwriting
-            fprintf(stderr, "Overwriting...\n");
+            fprintf(stderr, "\nOverwriting...\n");
             rm(fname);
         } else {
-            return -1;
+            return -3;
         }      
     }
  
@@ -74,7 +72,7 @@ ssize_t filecopy(const char *source, const char *todir) {
     if((input = open(source, O_RDONLY)) == -1) { //try opening the source file
         fprintf(stderr, "\n%s: File open error: %s\n", __func__, source);
         getyval("Press a key to continue...");
-        puts("\n");
+        puts("");
 
         return result;
     }
@@ -119,10 +117,10 @@ ssize_t filecopy(const char *source, const char *todir) {
         return result;
     }
 
-    if((output = opennew(destination, inodeof(source))) == -1) { //try to open the destinatiion file
+    if((output = opennew(destination, inodeof(source))) < 0) { //try to open the destinatiion file
         close(input);
 
-        return result;
+        return (ssize_t) output;
     }
 
 	errno = 0;
@@ -299,7 +297,7 @@ char *buildpath(const char *dirname) {
 
 bool isvalidfilename(const char *filename) {
     mode_t st_mode;
-    char dir_template[] = "/tmp/kopyx-tmpdir.XXXXXX", forbidden[] = "/<>\"|:&", *temp_dir, temp_file[FILENAME_MAX];
+    char dir_template[] = "/tmp/kopyx-tmpdir.XXXXXX", forbidden[] = "/<>\"|:&", extmatch[] = "?*+@!", temp_file[FILENAME_MAX], *temp_dir = NULL;
     FILE *fd;
 
     if(strpbrk(filename, forbidden)) { //check for invalid characters for filename
@@ -307,31 +305,28 @@ bool isvalidfilename(const char *filename) {
 
         return false;
     }
-
     if(strlen(filename) > 255) { //check if the lenght of file exceed the max acceppted by filesystem
         fprintf(stderr, "\n%s is invalid filename, use max %d characters.\n", filename, 255);
 
         return false;
     }
-
-    if(strpbrk(filename, "*?")) { //check if filname contains wildchars
+    if(strpbrk(filename, extmatch)) { //check if filname contains wildchars FNM_EXTMATCH
         wildcard = true;
 
         return true;
     }
-
     st_mode = filetype(filename);
     if(st_mode == S_IFREG) { //check if file exist
         return true;
     }
 
     temp_dir = mkdtemp(dir_template);
-    if(temp_dir == NULL) { //creating temp dir
+    if(temp_dir == NULL && !mkdir(temp_dir, S_IRWXU | S_IRWXG | S_IRWXO)) { //creating temp dir 0777
         fprintf(stderr, "\nError creating temporary directory %s", dir_template);
         exit(EXIT_FAILURE);
     }
-    sprintf(temp_file, "%s/%s", temp_dir, filename);
 
+    sprintf(temp_file, "%s/%s", temp_dir, filename);
     fd = fopen(temp_file, "w"); //try to create an empty file using "filename"
     if(fd == NULL) {
         if(rm(temp_dir)) {
@@ -343,7 +338,8 @@ bool isvalidfilename(const char *filename) {
     }
     fclose(fd);
 
-    st_mode = filetype(temp_file);
+    st_mode = filetype(temp_file); //check if the tempo file is regular
+
     if(rm(temp_file)) {
         fprintf(stderr, "\nError removing temporary file %s\n", temp_file);
         exit(EXIT_FAILURE);
