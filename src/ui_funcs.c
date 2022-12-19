@@ -68,7 +68,7 @@ void showtoscreen(const char *from) {
     if(!fptr) {
         fprintf(stderr, "\n%s: Error opening file %s\n", __func__, from);
         getyval("Press a key to continue...");
-        puts("\n");
+        puts("");
         
         return;
     }
@@ -100,9 +100,10 @@ void deletefile(const char *fname) {
         fflush(stdout);
         if(getyval(" - delete (Yes/No)? ")) {
             if(!rm(fname)) {
-                printf(" deleted!\n");
+                printf("\n%s deleted!", fname);
             }
         }
+        puts("");
     }
 
     return;  
@@ -132,7 +133,7 @@ void arg_error(void) {
     fprintf(stderr, "%s", errmsg);
 
     getyval("Press a key to continue...");
-    puts("\n");
+    puts("");
     
     exit(EXIT_FAILURE);
 }

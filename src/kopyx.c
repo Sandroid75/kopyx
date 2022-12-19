@@ -9,7 +9,7 @@ bool kopyx(const char *fromdir) {
     if(!(dir = opendir(fromdir))) {
         fprintf(stderr, "\n%s: Error opening directory: %s\n", __func__, fromdir);
         getyval("Press a key to continue...");
-        puts("\n");
+        puts("");
 
         return false;
     }
@@ -26,10 +26,10 @@ bool kopyx(const char *fromdir) {
                 }
                 break;
             case DT_REG: // This is a regular file.
-                if(wildcard) { // pattern contains wildcards like '*' or '?'
-                    match = wildcards(entry->d_name, pattern);
+                if(wildcard) { // pattern contains wildcards like '*', '?', '+', '@', '!'
+                    match = (fnmatch(pattern, entry->d_name, FNM_EXTMATCH) == 0); // FNM_EXTMATCH defined with _GNU_SOURCE
                 } else { //pattern contains the exact filename
-                    match = (strcmp(entry->d_name, pattern) == 0);
+                    match = (strcmp(pattern, entry->d_name) == 0);
                 }
                 if(match) {
                     sprintf(newpath, "%s%s", fromdir, entry->d_name);
@@ -67,10 +67,14 @@ void dosomething(const char *source) {
     } else if(diskspace(source, todir)) {
         printf("Coping %s -> %s\n", source, todir);
         bytes = filecopy(source, todir); //copy the file to the destination
-        if(bytes < 0) {
-            fprintf(stderr, "\nWarning: impossible coping %s to %s\n", source, todir);
+        if(bytes == -1L) {
+            fprintf(stderr, "Warning: impossible coping %s to %s\n", source, todir);
             getyval("Press any key to continue...");
-            puts("\n");
+            puts("");
+        } else if(bytes == -2L) {
+            printf("\nSkip coping: suource file coincide with destination file!\n");
+        } else if(bytes == -3L) {
+            printf("\nSkip coping...\n");
         } else {
             totalbytescopied += bytes;
             printf("%ld byte%scopied...\n", bytes, (bytes > 1L) ? "s " : " ");
@@ -78,19 +82,11 @@ void dosomething(const char *source) {
     }else {
         fprintf(stderr, "\n%s: Unknown error!\n", __func__);
         getyval("Press a key to continue...");
-        puts("\n");
+        puts("");
     }
 
     return;
 }
-
-bool wildcards(const char *haystack, const char *needle) {
-    return (bool) (*needle -42) ? *haystack ? (63 == *needle) |
-        (*haystack == *needle) &&
-        wildcards(haystack +1, needle +1) : (!*needle) : wildcards(haystack, needle +1) ||
-        (*haystack && wildcards(haystack +1, needle));
-}
-
 /* 
 void doglob(const char *fullpath) {
     glob_t pglob;
@@ -100,12 +96,12 @@ void doglob(const char *fullpath) {
         case GLOB_NOSPACE:
             fprintf(stderr, "\n%s: error running out of memory!\n", __func__);
             getyval("Press a key to continue...");
-            puts("\n");
+            puts("");
             break;
         case GLOB_ABORTED:
             fprintf(stderr, "\n%s: read error!\n", __func__);
             getyval("Press a key to continue...");
-            puts("\n");
+            puts("");
             break;
         case GLOB_NOMATCH:
             break;
