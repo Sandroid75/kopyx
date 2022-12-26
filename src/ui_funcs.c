@@ -122,6 +122,7 @@ void arg_error(void) {
         " -v  prompts for confirmation before copying each file\n"
         " -s  redirects the output to the screen (it can also be redirected with \'>\')\n"
         " -y  doesn't ask for confirmation to delete (use with care!)\n\n"
+        "Syntax: kopyx -options \"filename\" sourcedir destdir\n\n"
         "Examples:\n\n"
         "kopyx -dr \"*.dat\" /              copies all .dat files from / and all sub-dirs\n"
         "                                   on the current dir ./ and delete the originals.\n\n"

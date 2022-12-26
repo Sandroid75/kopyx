@@ -3,7 +3,6 @@
 
 #define _DEFAULT_SOURCE
 #include <dirent.h>
-#include <glob.h>
 #include "ui_funcs.h"
 #include "os_funcs.h"
 #include <fnmatch.h>

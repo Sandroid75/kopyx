@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     st_mode = filetype(fromdir);
     if(st_mode != S_IFDIR) {
         fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
-        free(fromdir);
+        FREE(fromdir);
 
         exit(EXIT_FAILURE);
     }
@@ -79,8 +79,8 @@ int main(int argc, char *argv[]) {
         st_mode = filetype(todir);
         if(st_mode != S_IFDIR) {
             fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
-            free(fromdir);
-            free(todir);
+            FREE(fromdir);
+            FREE(todir);
 
             exit(EXIT_FAILURE);
         }
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     totalbytescopied = -1L;
     found_one = 0;
     kopyx(fromdir); //main search and copy function
-    free(todir);
+    FREE(todir);
 
     if(!found_one) { //if the source file was not found
         fprintf(stderr, "No files found\n");
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, " or you can specify / to search the entire disk.\n");
         }
     }
-    free(fromdir);
+    FREE(fromdir);
 
     if(found_one > 1 && totalbytescopied > 0) {
         printf("%ld total bytes copied in %d files...\n", totalbytescopied, found_one);

@@ -14,6 +14,11 @@
 #define DBG_MSG(msg, ...) {}
 #endif
 
+/*
+Safe version of free()
+*/
+#define FREE(p) if(p) free(p)
+
 #define PUTNC(n, c) { for(int i = 0; i < n; i++) { putchar(c); } }
 #define NSECT 64
 #define BYTES 512

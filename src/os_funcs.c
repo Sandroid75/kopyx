@@ -278,7 +278,7 @@ bool file_info(const char *filename) {
 }
 
 char *buildpath(const char *dirname) {
-    char *path, half_path[FILENAME_MAX];
+    char half_path[FILENAME_MAX], *path = NULL;
 
     if(dirname[0] != '.' && dirname[0] != '/') { //if dirname does not begin with . and it doesn't start with / adds a "./" at the beginning of the variable
         sprintf(half_path, "./%s", dirname);
@@ -287,7 +287,11 @@ char *buildpath(const char *dirname) {
     }
 
     if(half_path[strlen(half_path) -1] != '/') { //verify that the last character is different from slash
-        asprintf(&path, "%s/", half_path); //adds a slash at the end of the path
+        if(asprintf(&path, "%s/", half_path) == -1) { //adds a slash at the end of the path
+            FREE(path);
+
+            return NULL;
+        }
     } else {
         path = strdup(half_path); //duplicate the path as it is
     }
@@ -321,9 +325,15 @@ bool isvalidfilename(const char *filename) {
     }
 
     temp_dir = mkdtemp(dir_template);
-    if(temp_dir == NULL && !mkdir(temp_dir, S_IRWXU | S_IRWXG | S_IRWXO)) { //creating temp dir 0777
-        fprintf(stderr, "\nError creating temporary directory %s", dir_template);
-        exit(EXIT_FAILURE);
+    if(temp_dir == NULL ) {
+        fprintf(stderr, "\nError building temporary directory from %s", dir_template);
+
+        return false;
+    }
+    if(!mkdir(temp_dir, S_IRWXU | S_IRWXG | S_IRWXO)) { //creating temp dir 0777
+        fprintf(stderr, "\nError creating temporary directory %s", temp_dir);
+
+        return false;
     }
 
     sprintf(temp_file, "%s/%s", temp_dir, filename);
@@ -331,7 +341,8 @@ bool isvalidfilename(const char *filename) {
     if(fd == NULL) {
         if(rm(temp_dir)) {
             fprintf(stderr, "\nError removing temporary directory %s\n", temp_dir);
-            exit(EXIT_FAILURE);
+
+            return false;
         }
         
         return false;
@@ -342,11 +353,13 @@ bool isvalidfilename(const char *filename) {
 
     if(rm(temp_file)) {
         fprintf(stderr, "\nError removing temporary file %s\n", temp_file);
-        exit(EXIT_FAILURE);
+
+        return false;
     }
     if(rm(temp_dir)) {
         fprintf(stderr, "\nError removing temporary directory %s\n", temp_dir);
-        exit(EXIT_FAILURE);
+
+        return false;
     }
 
     return (st_mode == S_IFREG);
@@ -357,7 +370,7 @@ ino_t inodeof(const char *filename) {
 
     if(lstat(filename, &sb) == -1) {
             fprintf(stderr, "\n%s : error reading i-node number!\n", filename);
-            free(todir);
+            FREE(todir);
 
             exit(EXIT_FAILURE);
     }

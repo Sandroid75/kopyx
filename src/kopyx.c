@@ -7,8 +7,8 @@ bool kopyx(const char *fromdir) {
     bool match = false;
 
     if(!(dir = opendir(fromdir))) {
-        fprintf(stderr, "\n%s: Error opening directory: %s\n", __func__, fromdir);
-        getyval("Press a key to continue...");
+        fprintf(stderr, "%s: Error opening directory: %s", __func__, fromdir);
+        getyval("\nPress a key to continue...");
         puts("");
 
         return false;
@@ -51,6 +51,7 @@ bool kopyx(const char *fromdir) {
 
     return true;
 }
+
 void dosomething(const char *source) {
     ssize_t bytes;
 
