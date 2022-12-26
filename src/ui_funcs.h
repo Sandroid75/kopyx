@@ -9,17 +9,29 @@
 #include <sys/termios.h>
 
 #ifdef DEBUG
-#define DBG_MSG(msg, ...) { fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); }
+#define DBG_MSG(msg, ...)                                                                                            \
+	{                                                                                                                \
+		fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); \
+	}
 #else
-#define DBG_MSG(msg, ...) {}
+#define DBG_MSG(msg, ...) \
+	{                     \
+	}
 #endif
 
 /*
 Safe version of free()
 */
-#define FREE(p) if(p) free(p)
+#define FREE(p) \
+	if (p)      \
+	free(p)
 
-#define PUTNC(n, c) { for(int i = 0; i < n; i++) { putchar(c); } }
+#define PUTNC(n, c)                   \
+	{                                 \
+		for (int i = 0; i < n; i++) { \
+			putchar(c);               \
+		}                             \
+	}
 #define NSECT 64
 #define BYTES 512
 
