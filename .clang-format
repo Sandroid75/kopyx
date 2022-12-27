@@ -9,10 +9,23 @@
 #   https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 #
 ---
+BasedOnStyle: GNU
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: false
+AlignConsecutiveAssignments:
+  Enabled: true
+  Consecutive: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AcrossEmptyLinesAndComments: false
 AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros:
+  Enabled: true
+  Consecutive: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AcrossEmptyLinesAndComments: false
+AlignConsecutiveStyle: false
 AlignEscapedNewlines: Left
 AlignOperands: true
 AlignTrailingComments: false
@@ -684,5 +697,5 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: Cpp03
 TabWidth: 4
-UseTab: Always
+UseTab: AlignWithSpaces
 ...

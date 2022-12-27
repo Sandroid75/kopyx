@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	int opt;
 	mode_t st_mode;
 
-	opterr = true;
+	opterr   = true;
 	wildcard = delfile = find_only = verify = standardoutput = info = include_subdirs = noconfirm = false;
 
 	while ((opt = getopt(argc, argv, "dfirvsy")) != -1) { // sets all options passed on the command line
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ((argc - optind) == 3) {
-		todir = buildpath(argv[optind + 2]);
+		todir   = buildpath(argv[optind + 2]);
 		st_mode = filetype(todir);
 		if (st_mode != S_IFDIR) {
 			fprintf(stderr, "\n%s : directory not exist!\n", fromdir);
@@ -89,9 +89,9 @@ int main(int argc, char *argv[])
 		todir = strdup("./");
 	}
 
-	todir_inode = inodeof(todir); // in order to skip the dest directory from search
+	todir_inode      = inodeof(todir); // in order to skip the dest directory from search
 	totalbytescopied = -1L;
-	found_one = 0;
+	found_one        = 0;
 	kopyx(fromdir); // main search and copy function
 	FREE(todir);
 

@@ -61,8 +61,8 @@ ssize_t filecopy(const char *source, const char *todir)
 {
 	int input, output;
 	struct stat fileinfo = { 0 };
-	ssize_t result = -1L;
-	off_t bytesCopied = 0;
+	ssize_t result       = -1L;
+	off_t bytesCopied    = 0;
 	char *errnomsg, *filename, destination[FILENAME_MAX];
 
 	filename = strdup(source); // duplicate because of basename() modify the string
@@ -128,7 +128,7 @@ ssize_t filecopy(const char *source, const char *todir)
 		return (ssize_t)output;
 	}
 
-	errno = 0;
+	errno  = 0;
 	result = sendfile(output, input, &bytesCopied, fileinfo.st_size); //sendfile will work with non-socket output (i.e. regular file) on Linux 2.6.33+
 
 	switch (errno) {
@@ -181,7 +181,7 @@ int rm(const char *fname)
 	int result;
 	char *errnomsg;
 
-	errno = 0;
+	errno  = 0;
 	result = filetype(fname);
 	if (result == S_IFREG) {
 		result = remove(fname);
