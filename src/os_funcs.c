@@ -61,7 +61,7 @@ ssize_t filecopy(const char *source, const char *todir)
 	struct stat sb = { 0 };
 	ssize_t chunk, bytesCopied, bytesTocopy = 0;
 	char *errmsg, *data, *ptr, *end, buffer[FILENAME_MAX], destination[FILENAME_MAX];
-	bool trayAgain = false; // Applications may wish to fall back to read(2)/write(2) in the case where sendfile() fails with EINVAL or ENOSYS.
+	bool tryAgain = false; // Applications may wish to fall back to read(2)/write(2) in the case where sendfile() fails with EINVAL or ENOSYS.
 
 	if (verify && !getyval(" - copy (Yes/No)?")) //if the user specified -v
 		return 0L;
@@ -156,7 +156,7 @@ ssize_t filecopy(const char *source, const char *todir)
 	case EINVAL:
 	case ENOSYS:
 		errmsg    = "Descriptor is not valid or locked, or an mmap(2)-like operation is not available for in_fd, or count is negative.";
-		trayAgain = true; // read NOTES at https://man7.org/linux/man-pages/man2/sendfile.2.html
+		tryAgain = true; // read NOTES at https://man7.org/linux/man-pages/man2/sendfile.2.html
 		break;
 	case EIO:
 		errmsg = "Unspecified error while reading from in_fd.";
@@ -178,7 +178,7 @@ ssize_t filecopy(const char *source, const char *todir)
 	if (errno) //if an error has occurred
 		fprintf(stderr, "\n%s: File copy error %s\nerrno: [%d] %s\n", __func__, source, errno, errmsg); //print the error message on stderr
 
-	if (trayAgain) { // read NOTES at https://man7.org/linux/man-pages/man2/sendfile.2.html
+	if (tryAgain) { // read NOTES at https://man7.org/linux/man-pages/man2/sendfile.2.html
 		close(output);
 		rm(destination);
 		if ((output = opennew(destination, sb)) < 0) { //try to open the destinatiion file
@@ -202,13 +202,13 @@ ssize_t filecopy(const char *source, const char *todir)
 				while (ptr < end) { //write data loop
 					bytesTocopy = write(output, ptr, (size_t)(end - ptr));
 					if (bytesTocopy <= 0) {
-						trayAgain = false; // exit from do while loop
+						tryAgain = false; // exit from do while loop
 						break; // exit from while loop
 					}
 					bytesCopied += bytesTocopy;
 					ptr += bytesTocopy;
 				}
-			} while (trayAgain);
+			} while (tryAgain);
 			FREE(data);
 
 			if (!errno)
