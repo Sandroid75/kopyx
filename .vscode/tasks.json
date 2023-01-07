@@ -2,16 +2,16 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "cppbuild",
+			"type": "shell",
 			"label": "C/C++: gcc build active file",
-			"command": "/usr/lib64/ccache/gcc",
+			"command": "/usr/bin/gcc",
 			"args": [
 				"-std=gnu17",
 				"-Wall",
-				"-O0",
+				"-O3",
 				"-fdiagnostics-color=always",
-				"-ggdb",
-				"-DDEBUG=1",
+				//"-ggdb",
+				//"-DDEBUG=1",
 				"${workspaceFolder}/src/*.c",
 				"-o",
 				"${workspaceFolder}/kopyx"
@@ -23,7 +23,7 @@
 				"$gcc"
 			],
 			"group": "build",
-			"detail": "compiler: /usr/lib64/ccache/gcc"
+			"detail": "compiler: /usr/bin/gcc"
 		}
 	]
 }
