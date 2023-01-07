@@ -9,20 +9,25 @@
 #include <sys/termios.h>
 
 #ifdef DEBUG
-#define DBG_MSG(msg, ...) { fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); }
+#define DBG_MSG(msg, ...)                                                                                            \
+	{                                                                                                                \
+		fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); \
+	}
 #else
-#define DBG_MSG(msg, ...) {}
+#define DBG_MSG(msg, ...) \
+	{                     \
+	}
 #endif
 
-#define PUTNC(n, c) { for(int i = 0; i < n; i++) { putchar(c); } }
+#define PUTNC(n, c)                   \
+	{                                 \
+		for (int i = 0; i < n; i++) { \
+			putchar(c);               \
+		}                             \
+	}
 #define NSECT 64
 #define BYTES 512
 
-/*
-get single key input, no need to press enter
-return kyepressed
-*/
-int getch(FILE *streamin);
 /*
 checks if the 'Y' or 'y' key was pressed
 return true if 'Y' or 'y' was pressed or false for all other keys
@@ -52,6 +57,5 @@ void arg_error(void);
 
 extern bool wildcard, delfile, find_only, verify, standardoutput, info, include_subdirs, noconfirm;
 extern char *pattern, *todir;
-extern ino_t todir_inode;
 
 #endif // UI_FUNCS_H_
