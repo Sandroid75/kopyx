@@ -10,21 +10,21 @@
 
 #ifdef DEBUG
 #define DBG_MSG(msg, ...)                                                                                            \
-	{                                                                                                                \
-		fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); \
-	}
+    {                                                                                                                \
+        fprintf(stderr, "FILE: %s IN FUNC: %s() LINE: %d : " msg "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__); \
+    }
 #else
 #define DBG_MSG(msg, ...) \
-	{                     \
-	}
+    {                     \
+    }
 #endif
 
 #define PUTNC(n, c)                   \
-	{                                 \
-		for (int i = 0; i < n; i++) { \
-			putchar(c);               \
-		}                             \
-	}
+    {                                 \
+        for (int i = 0; i < n; i++) { \
+            putchar(c);               \
+        }                             \
+    }
 #define NSECT 64
 #define BYTES 512
 

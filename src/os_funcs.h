@@ -21,31 +21,31 @@
 #include "ui_funcs.h"
 
 /* https://stackoverflow.com/questions/42156041/copying-a-huge-file-using-read-write-and-open-apis-in-linux */
-#define DEFAULT_CHUNK ((ssize_t)262144L)
+#define DEFAULT_CHUNK ((ssize_t) 262144L)
 
 /* filecopy() returns error */
-#define FC_ERROR -1L //unable to copy
-#define FC_SAMEF -2L //suorce and destination are the same file
-#define FC_NOOWD -3L //unable to overwrite the destination
-#define FC_USKIP -4L //user skiping overwrite
+#define FC_ERROR -1L // unable to copy
+#define FC_SAMEF -2L // suorce and destination are the same file
+#define FC_NOOWD -3L // unable to overwrite the destination
+#define FC_USKIP -4L // user skiping overwrite
 
 /* Get file or dir name without path */
 #define FILENAME(_path) strrchr(_path, '/') ? (strrchr(_path, '/') + 1) : (_path)
 
 /* Check if not root dir than add / at the end of path */
 #define ADDSLASH(_path)                      \
-	{                                        \
-		if (strcmp(_path, "/") &&            \
-		    _path[strlen(_path) - 1] != '/') \
-			strcat(_path, "/");              \
-	}
+    {                                        \
+        if (strcmp(_path, "/") &&            \
+            _path[strlen(_path) - 1] != '/') \
+            strcat(_path, "/");              \
+    }
 /* Check if not root dir than del / at the end of path */
 #define DELSLASH(_path)                      \
-	{                                        \
-		if (strcmp(_path, "/") &&            \
-		    _path[strlen(_path) - 1] == '/') \
-			_path[strlen(_path) - 1] = '\0'; \
-	}
+    {                                        \
+        if (strcmp(_path, "/") &&            \
+            _path[strlen(_path) - 1] == '/') \
+            _path[strlen(_path) - 1] = '\0'; \
+    }
 
 #define MIN(a, b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
 #define MAX(a, b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
@@ -53,11 +53,11 @@
 /* Safe version of free() don't need assign NULL after free */
 #ifndef FREE
 #define FREE(p)        \
-	{                  \
-		if ((p))       \
-			free((p)); \
-		(p) = NULL;    \
-	}
+    {                  \
+        if ((p))       \
+            free((p)); \
+        (p) = NULL;    \
+    }
 #endif
 
 /*
